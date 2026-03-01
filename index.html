@@ -10532,7 +10532,7 @@ function renderFBMHome(cards) {
         ${c.avgFB > 0 ? `<div class="fbm-fb-price">📘 Est. Resale: ~$${c.avgFB.toFixed(2)}</div>` : ''}
         ${profit > 0 ? `<div class="fbm-flip">💰 Est. Profit: +$${profit} (${roi}% ROI)</div>` : ''}
         ${s.store === getMyStoreName()
-          ? `<button class="fbm-view-btn" onclick="event.stopPropagation();toast('🛒 Added to cart! (Demo)','success')">🛒 Buy from ${getMyStoreName()}</button>`
+          ? `<button class="fbm-view-btn" onclick="event.stopPropagation();var c=window._fbmHomeCards[${idx}];if(c&&c.store)viewProductDetail({title:c.store.title||c.name,price:c.store.price,store:c.store.store||getMyStoreName(),image:c.store.image||'',link:c.store.link||'',originalPrice:c.store.originalPrice||0,rating:c.store.rating||0,reviews:c.store.reviews||0});">🛒 Buy from ${getMyStoreName()}</button>`
           : `<a class="fbm-view-btn" href="${s.link}" target="_blank">🛒 Buy on Amazon</a>`
         }
       </div>
