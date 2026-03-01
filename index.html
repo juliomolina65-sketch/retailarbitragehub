@@ -10411,7 +10411,7 @@ function renderWatchlist() {
         ${p.price>0?`<div class="prod-flip">💵 Est. profit: ~$${(fl - p.price).toFixed(2)} – $${(fh - p.price).toFixed(2)}</div>`:''}
         ${addedDate?`<div style="font-size:0.68rem;color:var(--sub2);margin-bottom:0.4rem;">👁 Added ${addedDate}</div>`:''}
         <div class="prod-actions">
-          ${p.link?`<a class="prod-btn btn-buy" href="${p.link}" target="_blank">🛒 Buy</a>`:''}
+          ${p.link && p.link !== '#' ? `<a class="prod-btn btn-buy" href="${p.link}" target="_blank">🛒 Buy</a>` : `<button class="prod-btn btn-buy" onclick="event.stopPropagation();viewProductDetail({title:'${(p.title||'').replace(/'/g,"\\'")}',price:${p.price},store:'${p.store}',image:'${(p.image||'').replace(/'/g,"\\'")}',link:'#'})">🛒 Buy</button>`}
           <button class="prod-btn btn-compare" onclick='openCompare("${p.title.replace(/"/g,"").substring(0,50)}")'>📊</button>
           <button class="prod-btn" onclick='removeFromWatchlist("${p.title.replace(/"/g,"")}")' style="flex:0;padding:0.35rem 0.55rem;background:rgba(232,39,26,0.1);border:1.5px solid rgba(232,39,26,0.3);color:var(--red);font-size:0.82rem;" title="Remove">🗑</button>
         </div>
@@ -11784,7 +11784,7 @@ function productCard(p, idx) {
   const detailJson = JSON.stringify({title:p.title,price:p.price,store:p.store,image:p.image||"",link:productUrl,originalPrice:p.originalPrice||0,rating:p.rating||0,reviews:p.reviews||0,flipLow:fl,flipHigh:fh}).replace(/'/g,"&#39;");
   const buyBtn = p.store==="AliExpress"
     ? `<button class="prod-btn btn-buy" onclick="event.stopPropagation();openAliLink('${p.rawLink||p.link}')">🛒 Buy</button>`
-    : `<a class="prod-btn btn-buy" href="${p.link}" target="_blank" onclick="event.stopPropagation()">🛒 Buy</a>`;
+    : (isStore ? `<button class="prod-btn btn-buy" onclick="event.stopPropagation();viewProductDetail(${detailJson})">🛒 Buy</button>` : `<a class="prod-btn btn-buy" href="${p.link}" target="_blank" onclick="event.stopPropagation()">🛒 Buy</a>`);
   const isStore = p.store === getMyStoreName();
   const urgency = getUrgencyTag(p.title, p.price, idx);
   return `<div class="prod-card" style="cursor:pointer;" onclick='viewProductDetail(${detailJson})'>
@@ -13547,7 +13547,7 @@ function renderFeaturedCards() {
           <span class="feat-price">${p.price > 0 ? '$'+p.price.toFixed(2) : 'View'}</span>
         </div>
         ${p.price > 0 ? `<div class="feat-flip">💵 Profit: ~$${(fl - p.price).toFixed(2)}–$${(fh - p.price).toFixed(2)}</div>` : ''}
-        <a class="feat-buy-btn" href="${p.link}" target="_blank" onclick="trackCommissionClick(${JSON.stringify({store:p.store,title:p.title,price:p.price}).replace(/"/g,'&quot;')})">🛒 Buy Now</a>
+        ${p.link && p.link !== '#' ? `<a class="feat-buy-btn" href="${p.link}" target="_blank" onclick="event.stopPropagation();trackCommissionClick(${JSON.stringify({store:p.store,title:p.title,price:p.price}).replace(/"/g,'&quot;')})">🛒 Buy Now</a>` : `<button class="feat-buy-btn" onclick="event.stopPropagation();var item=window._featuredItems[${idx}];if(item)viewProductDetail(item);" style="border:none;cursor:pointer;">🛒 Buy Now</button>`}
       </div>
     </div>`;
   }).join('');

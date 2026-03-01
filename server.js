@@ -6,8 +6,9 @@ const PORT = process.env.PORT || 3000;
 const DIR = __dirname;
 
 // ── Stripe Config ──────────────────────────────────────────
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
 if (!STRIPE_SECRET_KEY) console.warn('Warning: STRIPE_SECRET_KEY not set in environment variables');
+else console.log('Stripe key loaded, length:', STRIPE_SECRET_KEY.length, 'ends with:', STRIPE_SECRET_KEY.slice(-4));
 const stripe = require('stripe')(STRIPE_SECRET_KEY);
 
 const PRO_PRICE_ID = process.env.PRO_PRICE_ID || 'price_1T5q3iH9I0r7YLxVlNV8VnNq';
