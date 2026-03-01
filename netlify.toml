@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/create-checkout-session"
+  to = "/.netlify/functions/create-checkout-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/session-status"
+  to = "/.netlify/functions/session-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/create-portal-session"
+  to = "/.netlify/functions/create-portal-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/create-product-checkout"
+  to = "/.netlify/functions/create-product-checkout"
+  status = 200
