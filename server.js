@@ -7,9 +7,9 @@ const DIR = __dirname;
 
 // ── Stripe Config ──────────────────────────────────────────
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
-if (!STRIPE_SECRET_KEY) console.warn('Warning: STRIPE_SECRET_KEY not set in environment variables');
+if (!STRIPE_SECRET_KEY) console.warn('Warning: STRIPE_SECRET_KEY not set in environment variables. Stripe API endpoints will return errors.');
 else console.log('Stripe key loaded, length:', STRIPE_SECRET_KEY.length, 'ends with:', STRIPE_SECRET_KEY.slice(-4));
-const stripe = require('stripe')(STRIPE_SECRET_KEY);
+const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null;
 
 const PRO_PRICE_ID = process.env.PRO_PRICE_ID || 'price_1T5q3iH9I0r7YLxVlNV8VnNq';
 
@@ -68,6 +68,12 @@ http.createServer(async (req, res) => {
       'Access-Control-Allow-Headers': 'Content-Type',
     });
     res.end();
+    return;
+  }
+
+  // ── Guard: Stripe not configured ──────────────────────
+  if (urlPath.startsWith('/api/') && !stripe) {
+    json(res, 503, { error: 'Stripe is not configured on this server' });
     return;
   }
 
