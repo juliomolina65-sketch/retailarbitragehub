@@ -12986,8 +12986,12 @@ function getHotSocialTag(title) {
 function renderHotToday() {
   const el = document.getElementById('hot-today-scroll');
   if (!el) return;
-  const active = myStoreProducts.filter(p => p.active !== false && p.price > 0 && p.image);
-  if (!active.length) { el.innerHTML = ''; return; }
+  let active = myStoreProducts.filter(p => p.active !== false && p.price > 0 && p.image);
+  if (!active.length) {
+    // Use fallback products so section never shows empty
+    const fb = ['electronics', 'fashion', 'home', 'gaming'].flatMap(q => getFallbackProducts('amazon', q)).filter(p => p.image);
+    if (fb.length) { active = fb; } else { el.innerHTML = ''; return; }
+  }
   // Pick 8-10 products, prioritize higher margin
   const sorted = [...active].sort((a, b) => {
     const ma = a.sourcePrice ? (a.price - a.sourcePrice) : a.price * 0.3;
