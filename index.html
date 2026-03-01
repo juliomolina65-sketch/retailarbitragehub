@@ -8966,7 +8966,7 @@ function viewProductDetail(p) {
       <div style="font-size:0.68rem;color:var(--sub);margin-top:0.2rem;">Resale est. $${fl} – $${fh} | Buy at $${p.price.toFixed(2)}</div>
     </div>` : ''}
     ${variantHtml}
-    ${isMyStore ? `<button onclick='(function(){var v=window._selectedVariants||{};addToCart(Object.assign(${JSON.stringify({title:p.title,price:p.price,store:p.store,image:p.image||"",link:buyLink}).replace(/'/g,"&#39;")},v.size?{size:v.size}:{},v.color?{color:v.color}:{}));this.closest("div[style*=fixed]").remove()})()' style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.4rem;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.88rem;font-weight:900;color:#fff;cursor:pointer;text-decoration:none;margin-bottom:0.5rem;box-shadow:0 3px 12px rgba(34,197,94,0.3);">🛒 Buy from ${p.store}</button>` : `<a href="${buyLink}" target="_blank" rel="noopener" ${buyOnClick} style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.4rem;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.88rem;font-weight:900;color:#fff;cursor:pointer;text-decoration:none;margin-bottom:0.5rem;box-shadow:0 3px 12px rgba(34,197,94,0.3);">🛒 Buy Now on ${p.store}</a>`}
+    ${isMyStore ? `<button onclick='(function(){var v=window._selectedVariants||{};buyNowProduct(Object.assign(${JSON.stringify({title:p.title,price:p.price,store:p.store,image:p.image||"",link:buyLink}).replace(/'/g,"&#39;")},v.size?{size:v.size}:{},v.color?{color:v.color}:{}))})()' style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.4rem;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.88rem;font-weight:900;color:#fff;cursor:pointer;text-decoration:none;margin-bottom:0.5rem;box-shadow:0 3px 12px rgba(34,197,94,0.3);">💳 Buy Now — $${p.price.toFixed(2)}</button>` : `<a href="${buyLink}" target="_blank" rel="noopener" ${buyOnClick} style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.4rem;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.88rem;font-weight:900;color:#fff;cursor:pointer;text-decoration:none;margin-bottom:0.5rem;box-shadow:0 3px 12px rgba(34,197,94,0.3);">🛒 Buy Now on ${p.store}</a>`}
     <div style="display:flex;gap:0.5rem;">
       <button onclick='(function(){var v=window._selectedVariants||{};addToCart(Object.assign(${JSON.stringify({title:p.title,price:p.price,store:p.store,image:p.image||"",link:buyLink}).replace(/'/g,"&#39;")},v.size?{size:v.size}:{},v.color?{color:v.color}:{}))})()' style="flex:2;display:flex;align-items:center;justify-content:center;gap:0.4rem;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.88rem;font-weight:900;color:#000;cursor:pointer;">🛒 Add to Cart</button>
       <button onclick='openCompare("${p.title.replace(/"/g,"").substring(0,50)}")' style="flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:0.75rem;font-family:var(--font);font-size:0.72rem;font-weight:800;color:var(--text);cursor:pointer;">📊 Compare Stores ${typeof isPro==='function'&&!isPro()?'🔒':''}</button>
@@ -9624,6 +9624,39 @@ function cartItemRow(c, i, subtotal) {
 }
 
 let cartCheckout = null;
+
+async function buyNowProduct(product) {
+  const btn = event && event.target ? event.target : null;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Loading checkout...'; }
+  try {
+    const resp = await fetch('/api/create-product-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: currentUser?.email || '',
+        items: [{ title: product.title + (product.size || product.color ? ' (' + [product.size, product.color].filter(Boolean).join(' / ') + ')' : ''), price: product.price, qty: 1, image: product.image || '' }],
+      }),
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    // Close product detail modal
+    const modal = btn ? btn.closest('div[style*=fixed]') : null;
+    if (modal) modal.remove();
+    // Open cart modal with checkout
+    document.getElementById('cart-panel').classList.add('open');
+    document.getElementById('cart-items').style.display = 'none';
+    document.getElementById('cart-footer').style.display = 'none';
+    document.getElementById('cart-checkout-wrap').style.display = 'block';
+    document.getElementById('cart-modal-title').textContent = '💳 Secure Checkout';
+    const stripe = getStripe();
+    cartCheckout = await stripe.initEmbeddedCheckout({ clientSecret: data.clientSecret });
+    cartCheckout.mount('#cart-checkout-mount');
+  } catch (err) {
+    console.error('Buy now error:', err);
+    toast('❌ Checkout failed: ' + err.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '🛒 Buy Now'; }
+  }
+}
 
 async function checkoutRAH() {
   const storeName = getMyStoreName();
