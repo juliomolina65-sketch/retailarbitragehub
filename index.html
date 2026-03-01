@@ -2046,9 +2046,8 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
             <h2 style="font-family:var(--font-display);font-size:2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;">FIND. FLIP. PROFIT.</h2>
             <p style="font-size:0.82rem;color:rgba(255,255,255,0.65);margin-top:0.45rem;line-height:1.55;">Deals from Amazon, eBay & AliExpress. Track your flips. Earn referral money.</p>
             <div class="hero-stats" style="display:flex;gap:0;margin-top:1rem;background:rgba(0,0,0,0.4);border-radius:12px;padding:0.6rem;border:1px solid rgba(255,215,0,0.2);">
-              <div class="hero-stat" id="hs-flips-wrap" onclick="isPro()?goTab('flips'):openProModal()" style="cursor:pointer;flex:1;text-align:center;display:none;"><div class="val" id="hs-flips">0</div><div class="lbl">My Flips</div></div>
-              <div class="hero-stat" id="hs-profit-wrap" onclick="isPro()?goTab('flips'):openProModal()" style="cursor:pointer;flex:1;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);display:none;"><div class="val" id="hs-profit">$0</div><div class="lbl">Profit</div></div>
-              <div class="hero-stat" id="hs-signin-wrap" onclick="goTab('profile')" style="cursor:pointer;flex:1;text-align:center;"><div class="val" style="font-size:0.9rem;">🔒</div><div class="lbl">Sign in to track</div></div>
+              <div class="hero-stat" id="hs-flips-wrap" onclick="isPro()?goTab('flips'):openProModal()" style="cursor:pointer;flex:1;text-align:center;"><div class="val" id="hs-flips">0</div><div class="lbl">My Flips</div></div>
+              <div class="hero-stat" id="hs-profit-wrap" onclick="isPro()?goTab('flips'):openProModal()" style="cursor:pointer;flex:1;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);"><div class="val" id="hs-profit">$0</div><div class="lbl">Profit</div></div>
               <div class="hero-stat" onclick="goTab('stores')" style="cursor:pointer;flex:1;text-align:center;border-left:1px solid var(--border);"><div class="val">8</div><div class="lbl">Stores</div></div>
             </div>
           </div>
@@ -13342,13 +13341,12 @@ function updateHomeStats() {
   updateHeroStatsVisibility();
 }
 function updateHeroStatsVisibility() {
+  // Stats always visible — clicking them opens Pro modal if not Pro
   const logged = isLoggedIn();
   const flipsWrap = document.getElementById("hs-flips-wrap");
   const profitWrap = document.getElementById("hs-profit-wrap");
-  const signinWrap = document.getElementById("hs-signin-wrap");
-  if (flipsWrap) flipsWrap.style.display = logged ? "" : "none";
-  if (profitWrap) { profitWrap.style.display = logged ? "" : "none"; profitWrap.style.borderLeft = logged ? "1px solid var(--border)" : "none"; profitWrap.style.borderRight = logged ? "1px solid var(--border)" : "none"; }
-  if (signinWrap) signinWrap.style.display = logged ? "none" : "";
+  if (flipsWrap) flipsWrap.style.display = "";
+  if (profitWrap) { profitWrap.style.display = ""; profitWrap.style.borderLeft = "1px solid var(--border)"; profitWrap.style.borderRight = "1px solid var(--border)"; }
 }
 
 // ─── EARN / REFERRALS ───
