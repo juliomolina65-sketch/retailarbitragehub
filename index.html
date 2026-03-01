@@ -13908,7 +13908,7 @@ function renderHomeAuctions() {
     const detailStore = isRAH ? getMyStoreName() : "eBay";
     const retailLine = isRAH && a.retailPrice ? `<div style="font-size:0.6rem;color:var(--sub2);text-decoration:line-through;">Retail: $${a.retailPrice.toFixed(2)}</div>` : '';
     const bidBtnHtml = isRAH
-      ? `<button class="am-bid-btn" onclick="toast('🎉 Bid placed! (Demo)','success')">🏷 Place Bid</button>`
+      ? `<button class="am-bid-btn" onclick="placeBid('${a.id}')">🏷 Place Bid</button>`
       : `<a class="am-bid-btn" href="${a.link}" target="_blank">🏷 <span data-i18n="auction.bidNow">${getT('auction.bidNow')}</span></a>`;
 
     const [afl, afh] = calcFlip(a.bid, detailStore);
@@ -13982,6 +13982,30 @@ function trackHomeAuction(id, title) {
   myFlips.push({title, buyPrice:0, store:'Auction', dateAdded:now(), status:'tracking'});
   saveFlips();
   toast('📒 Added to My Flips!', 'success');
+}
+
+function placeBid(auctionId) {
+  const auction = homeAuctions.find(a => a.id === auctionId);
+  if (!auction) return toast('Auction not found', 'error');
+  const secsLeft = Math.max(0, Math.round((auction.endTs - Date.now()) / 1000));
+  if (secsLeft <= 0) return toast('⏰ This auction has ended!', 'error');
+  // Scale increment based on price
+  const inc = auction.bid < 20 ? +(1 + Math.random()).toFixed(2) : +(2 + Math.random() * 3).toFixed(2);
+  auction.bid = +(auction.bid + inc).toFixed(2);
+  auction.bids += 1;
+  // Update card DOM directly
+  const card = document.getElementById('amc-' + auctionId);
+  if (card) {
+    const bidVal = card.querySelector('.am-bid-val');
+    const bidCount = card.querySelector('.am-bid-count');
+    if (bidVal) bidVal.textContent = '$' + auction.bid.toFixed(2);
+    if (bidCount) bidCount.textContent = auction.bids + ' bids';
+  }
+  // Save to localStorage
+  const bids = JSON.parse(localStorage.getItem('rah_my_bids') || '[]');
+  bids.push({ auctionId, title: auction.title, amount: auction.bid, timestamp: Date.now() });
+  localStorage.setItem('rah_my_bids', JSON.stringify(bids));
+  toast('🎉 Bid placed! $' + auction.bid.toFixed(2), 'success');
 }
 
 // ─── ALIEXPRESS CLICK HANDLER ───
