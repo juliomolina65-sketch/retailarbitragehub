@@ -13763,19 +13763,27 @@ function setAuctionSource(source, btn) {
 async function loadRAHAuctions(cat) {
   homeAuctionCat = cat;
   const el = document.getElementById('home-auction-scroll');
-  el.innerHTML = '<div class="auction-mini-skel"></div><div class="auction-mini-skel"></div><div class="auction-mini-skel"></div>';
+  // Render immediately with store/fallback data so user never sees skeletons
+  homeAuctions = generateRAHAuctionsFromStore(cat);
+  if (homeAuctions.length) {
+    renderHomeAuctions();
+    startAuctionTimers();
+  } else {
+    el.innerHTML = '<div class="auction-mini-skel"></div><div class="auction-mini-skel"></div><div class="auction-mini-skel"></div>';
+  }
+  // Then try API in background for better data
   const query = AUCTION_CAT_QUERIES[cat] || AUCTION_CAT_QUERIES.hot;
   try {
     const wm = await fetchWalmart(query);
-    if (wm.length > 0) autoImportWalmartToStore(wm);
-    homeAuctions = generateRAHAuctions(wm, cat);
+    if (wm.length > 0) {
+      autoImportWalmartToStore(wm);
+      homeAuctions = generateRAHAuctions(wm, cat);
+      renderHomeAuctions();
+      startAuctionTimers();
+    }
   } catch(e) {
-    console.error("RAH auction load failed:", e);
-    homeAuctions = generateRAHAuctionsFromStore(cat);
+    console.error("RAH auction load error:", e);
   }
-  if (!homeAuctions.length) homeAuctions = generateRAHAuctionsFromStore(cat);
-  renderHomeAuctions();
-  startAuctionTimers();
 }
 
 function generateRAHAuctions(walmartProducts, cat) {
