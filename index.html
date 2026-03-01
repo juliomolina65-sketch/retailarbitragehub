@@ -7702,7 +7702,7 @@ function renderCouponsDeals() {
   if (!el) return;
   const coupons = [
     { code: 'FLIP50', discount: '50% OFF', desc: '2nd Month Pro Membership', store: 'RetailArbitrageHub', color: '#22c55e', bg: 'linear-gradient(135deg,#22c55e,#16a34a)', expires: '3 days', action: 'openProModal()' },
-    { code: 'SAVE20', discount: '20% OFF', desc: 'Electronics Deals on Amazon', store: 'Amazon', color: '#ff9900', bg: 'linear-gradient(135deg,#ff9900,#f59e0b)', expires: '24 hrs', action: "window.open('https://www.amazon.com/deals','_blank')" },
+    { code: 'SAVE20', discount: '20% OFF', desc: 'Electronics Deals on Amazon', store: 'Amazon', color: '#ff9900', bg: 'linear-gradient(135deg,#ff9900,#f59e0b)', expires: '24 hrs', action: "window.open('https://www.amazon.com/deals?tag="+AMAZON_AFF+"','_blank')" },
     { code: 'NEWUSER', discount: '$10 OFF', desc: 'First Order $50+', store: 'RetailArbitrageHub', color: '#6366f1', bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', expires: '7 days', action: 'openProModal()' },
     { code: 'BESTDEAL', discount: '15% OFF', desc: 'Open Box Items at Best Buy', store: 'Best Buy', color: '#0046be', bg: 'linear-gradient(135deg,#0046be,#2563eb)', expires: '48 hrs', action: "window.open('https://www.bestbuy.com/site/misc/open-box/pcmcat748300659342.c','_blank')" },
     { code: 'ALISHIP', discount: 'FREE SHIP', desc: 'Orders Over $5 on AliExpress', store: 'AliExpress', color: '#e53238', bg: 'linear-gradient(135deg,#e53238,#f43f5e)', expires: '5 days', action: "window.open('https://www.aliexpress.com','_blank')" },
@@ -8592,10 +8592,10 @@ function renderSeasonalCalendar() {
 
 function getCheapItemLink(store, title) {
   const q = encodeURIComponent(title);
-  if (store === 'Amazon') return 'https://www.amazon.com/s?k=' + q;
-  if (store === 'eBay') return 'https://www.ebay.com/sch/i.html?_nkw=' + q;
+  if (store === 'Amazon') return 'https://www.amazon.com/s?k=' + q + '&tag=' + AMAZON_AFF;
+  if (store === 'eBay') return makeEbayAffLink('https://www.ebay.com/sch/i.html?_nkw=' + q);
   if (store === 'AliExpress') return 'https://www.aliexpress.com/wholesale?SearchText=' + q;
-  return 'https://www.amazon.com/s?k=' + q;
+  return 'https://www.amazon.com/s?k=' + q + '&tag=' + AMAZON_AFF;
 }
 
 let _cheapTier = 10;
@@ -8701,11 +8701,11 @@ async function loadAmazonTrending() {
 }
 
 const FALLBACK_AMZ_TRENDING = [
-  {title:"Samsung Galaxy S24 Ultra 256GB Unlocked",price:949.99,originalPrice:1299.99,image:"https://m.media-amazon.com/images/I/71lIkCx3qHL._AC_SX679_.jpg",store:"Amazon",rating:4.6,reviews:12500,link:"#"},
-  {title:"Apple AirPods Pro 2nd Gen USB-C",price:189.99,originalPrice:249.99,image:"https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SX679_.jpg",store:"Amazon",rating:4.7,reviews:85000,link:"#"},
-  {title:"Ninja Creami Ice Cream Maker NC301",price:149.99,originalPrice:199.99,image:"https://m.media-amazon.com/images/I/61GpCsKLOWL._AC_SX679_.jpg",store:"Amazon",rating:4.5,reviews:42000,link:"#"},
-  {title:"BISSELL Little Green Portable Carpet Cleaner",price:89.99,originalPrice:123.59,image:"https://m.media-amazon.com/images/I/81bSw6fnO+L._AC_SX679_.jpg",store:"Amazon",rating:4.4,reviews:98000,link:"#"},
-  {title:"Beckham Hotel Collection Bed Pillows Set",price:41.97,originalPrice:79.99,image:"https://m.media-amazon.com/images/I/71ep4XDN0dL._AC_SX679_.jpg",store:"Amazon",rating:4.4,reviews:230000,link:"#"},
+  {title:"Samsung Galaxy S24 Ultra 256GB Unlocked",price:949.99,originalPrice:1299.99,image:"https://m.media-amazon.com/images/I/71lIkCx3qHL._AC_SX679_.jpg",store:"Amazon",rating:4.6,reviews:12500,link:"https://www.amazon.com/s?k=Samsung+Galaxy+S24+Ultra+256GB+Unlocked&tag="+AMAZON_AFF},
+  {title:"Apple AirPods Pro 2nd Gen USB-C",price:189.99,originalPrice:249.99,image:"https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SX679_.jpg",store:"Amazon",rating:4.7,reviews:85000,link:"https://www.amazon.com/s?k=Apple+AirPods+Pro+2nd+Gen+USB-C&tag="+AMAZON_AFF},
+  {title:"Ninja Creami Ice Cream Maker NC301",price:149.99,originalPrice:199.99,image:"https://m.media-amazon.com/images/I/61GpCsKLOWL._AC_SX679_.jpg",store:"Amazon",rating:4.5,reviews:42000,link:"https://www.amazon.com/s?k=Ninja+Creami+Ice+Cream+Maker+NC301&tag="+AMAZON_AFF},
+  {title:"BISSELL Little Green Portable Carpet Cleaner",price:89.99,originalPrice:123.59,image:"https://m.media-amazon.com/images/I/81bSw6fnO+L._AC_SX679_.jpg",store:"Amazon",rating:4.4,reviews:98000,link:"https://www.amazon.com/s?k=BISSELL+Little+Green+Portable+Carpet+Cleaner&tag="+AMAZON_AFF},
+  {title:"Beckham Hotel Collection Bed Pillows Set",price:41.97,originalPrice:79.99,image:"https://m.media-amazon.com/images/I/71ep4XDN0dL._AC_SX679_.jpg",store:"Amazon",rating:4.4,reviews:230000,link:"https://www.amazon.com/s?k=Beckham+Hotel+Collection+Bed+Pillows+Set&tag="+AMAZON_AFF},
 ];
 
 // ─── ALIEXPRESS HOT FINDS (horizontal cards) ───
