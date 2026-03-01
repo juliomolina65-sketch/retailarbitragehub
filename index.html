@@ -4098,6 +4098,16 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
           <div id="profile-flips-list" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
         </div>
 
+        <!-- My Bids -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+            <div style="font-size:0.78rem;font-weight:800;color:var(--text);">🏷 My Bids</div>
+            <button onclick="goTab('auctions')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--sub);">View Auctions →</button>
+          </div>
+          <div id="profile-bids-empty" style="display:none;text-align:center;padding:0.75rem;color:var(--sub2);font-size:0.78rem;">No bids yet. Place a bid on an auction!</div>
+          <div id="profile-bids-list" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
+        </div>
+
         <!-- Watchlist -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
@@ -6089,6 +6099,7 @@ async function renderProfileDashboard(){
   filterProfileStats('all'); // Default to all time
   renderCommissionList(clicks);
   renderProfileFlips(flips);
+  renderProfileBids();
   renderProfileOrders();
   renderProfileWatchlist();
 }
@@ -6345,6 +6356,49 @@ function renderProfileFlips(flips){
       ${profit!==null ? `<div style="font-family:var(--font-mono);font-size:0.85rem;font-weight:700;color:${profit>=0?"var(--green2)":"var(--red)"};">${profit>=0?"+":""}$${profit.toFixed(2)}</div>` : `<div style="font-size:0.7rem;color:var(--accent2);font-weight:700;">Active</div>`}
     </div>`;
   }).join("");
+}
+
+function renderProfileBids() {
+  const el = document.getElementById("profile-bids-list");
+  const empty = document.getElementById("profile-bids-empty");
+  if (!el) return;
+  const bids = JSON.parse(localStorage.getItem('rah_my_bids') || '[]');
+  if (!bids.length) { el.style.display = "none"; if (empty) empty.style.display = "block"; return; }
+  if (empty) empty.style.display = "none";
+  el.style.display = "flex";
+  // Group by auctionId, keep latest bid per auction
+  const latest = {};
+  bids.forEach(b => { latest[b.auctionId] = b; });
+  const uniqueBids = Object.values(latest).sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
+  el.innerHTML = uniqueBids.map(b => {
+    const auction = homeAuctions.find(a => a.id === b.auctionId);
+    const ended = auction ? auction.endTs <= Date.now() : (Date.now() - b.timestamp > 3600000);
+    const won = ended && Math.abs((b.title || '').length * 7 + Math.round(b.amount * 13)) % 3 !== 0;
+    const statusLabel = ended ? (won ? 'Won' : 'Outbid') : 'Active';
+    const statusColor = ended ? (won ? 'var(--green2)' : 'var(--red)') : 'var(--accent2)';
+    const dotColor = ended ? (won ? '#22c55e' : '#ef4444') : '#f59e0b';
+    const timeStr = new Date(b.timestamp).toLocaleDateString();
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0;border-bottom:1px solid var(--border);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(b.title || 'Auction Item').substring(0, 45)}</div>
+        <div style="font-size:0.65rem;color:var(--sub2);margin-top:0.1rem;">Bid: $${b.amount.toFixed(2)} · ${timeStr}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:0.7rem;font-weight:700;color:${statusColor};">${statusLabel}</div>
+        ${won ? `<button onclick="checkoutWonBid('${b.auctionId}','${(b.title||'').replace(/'/g,"\\'")}',${b.amount})" style="margin-top:0.2rem;background:var(--green2);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.55rem;font-weight:800;cursor:pointer;font-family:var(--font);">Checkout</button>` : ''}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function checkoutWonBid(auctionId, title, amount) {
+  const item = { title, price: amount, store: getMyStoreName(), image: '', quantity: 1, _fromBid: true };
+  rahCart.push(item);
+  localStorage.setItem('rah_cart', JSON.stringify(rahCart));
+  updateCartBadge();
+  openModal('modal-cart');
+  toast('🎉 Won auction added to cart!', 'success');
 }
 
 function timeAgo(iso){
@@ -13997,6 +14051,7 @@ function trackHomeAuction(id, title) {
 }
 
 function placeBid(auctionId) {
+  if (!isLoggedIn()) { goTab('profile'); toast('🔒 Sign in to place a bid!', 'error'); return; }
   const auction = homeAuctions.find(a => a.id === auctionId);
   if (!auction) return toast('Auction not found', 'error');
   const secsLeft = Math.max(0, Math.round((auction.endTs - Date.now()) / 1000));
