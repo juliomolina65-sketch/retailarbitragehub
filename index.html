@@ -4575,30 +4575,6 @@ const WALMART_MARKUP = 1.35; // 35% markup on Walmart products for store
 const AMAZON_STORE_MARKUP = 1.30; // 30% markup on Amazon products for store
 const RAH_STORE_NAME = "RetailArbitrageHub";
 
-// ─── API CACHE (localStorage-backed, survives refresh) ────────────
-const CACHE_TTL_2H = 2 * 60 * 60 * 1000;
-const CACHE_TTL_4H = 4 * 60 * 60 * 1000;
-const CACHE_TTL_1H = 1 * 60 * 60 * 1000;
-let _apiCallsThisSession = 0;
-const MAX_API_CALLS_PER_SESSION = 30;
-
-function apiCache(key, ttlMs) {
-  const raw = localStorage.getItem('apicache_' + key);
-  if (raw) {
-    try {
-      const obj = JSON.parse(raw);
-      if (Date.now() - obj.ts < ttlMs) return obj.data;
-    } catch(e) {}
-  }
-  return null;
-}
-function apiCacheSet(key, data) {
-  try { localStorage.setItem('apicache_' + key, JSON.stringify({ ts: Date.now(), data })); } catch(e) {}
-}
-function apiBudgetExceeded() {
-  return _apiCallsThisSession >= MAX_API_CALLS_PER_SESSION;
-}
-function apiCallCount() { _apiCallsThisSession++; }
 
 // ─── STRIPE CONFIG ──────────────────────────────────────────────────
 // SETUP INSTRUCTIONS:
@@ -8565,26 +8541,30 @@ function setCheapTier(tier, btn) {
   loadCheapCarousel(tier);
 }
 
+let _cheapCache = null;
+let _cheapCacheTs = 0;
+const CHEAP_CACHE_TTL = 10 * 60 * 1000;
 const CHEAP_QUERIES = ["phone accessories under 5 dollars","cheap gadgets deals","usb cable charger cheap","mini bluetooth speaker cheap"];
 
 async function loadCheapCarousel(maxPrice) {
   maxPrice = maxPrice || _cheapTier || 5;
   const el = document.getElementById('cheap-carousel');
   if (!el) return;
+  el.innerHTML = '<div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>';
 
-  // Check localStorage cache first
-  const cheapCacheKey = 'cheap_carousel';
-  let cheapItems = apiCache(cheapCacheKey, CACHE_TTL_4H);
-  if (!cheapItems) {
-    el.innerHTML = '<div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>';
+  let cheapItems = [];
+  const now = Date.now();
+  if (_cheapCache && (now - _cheapCacheTs < CHEAP_CACHE_TTL)) {
+    cheapItems = _cheapCache;
+  } else {
     try {
       const q = CHEAP_QUERIES[Math.floor(Math.random() * CHEAP_QUERIES.length)];
       const [amz, ebay, wm] = await Promise.all([fetchAmazon(q), fetchEbay(q), fetchWalmart(q)]);
       if (wm.length > 0) autoImportWalmartToStore(wm);
       const storeItems = walmartToStoreProducts(wm);
       cheapItems = [...storeItems, ...amz, ...ebay].filter(p => p.price > 0 && p.price <= 20 && p.image);
-      if (cheapItems.length > 0) apiCacheSet(cheapCacheKey, cheapItems);
-    } catch(e) { console.log("Cheap finds fetch failed:", e); cheapItems = []; }
+      if (cheapItems.length > 0) { _cheapCache = cheapItems; _cheapCacheTs = now; }
+    } catch(e) { console.log("Cheap finds fetch failed:", e); }
   }
 
   const filtered = cheapItems.filter(p => p.price <= maxPrice);
@@ -8614,14 +8594,9 @@ async function loadAmazonTrending() {
   const gridEl = document.getElementById('amz-trending-grid');
   if (!gridEl) return;
   try {
-    const cached = apiCache('amztrending', CACHE_TTL_2H);
-    let items;
-    if (cached) { items = cached; } else {
-      items = await fetchAmazonBestSellers('aps');
-      if (!items.length) items = await fetchAmazon('trending bestsellers 2025');
-      if (!items.length) items = FALLBACK_AMZ_TRENDING;
-      apiCacheSet('amztrending', items);
-    }
+    let items = await fetchAmazonBestSellers('aps');
+    if (!items.length) items = await fetchAmazon('trending bestsellers 2025');
+    if (!items.length) items = FALLBACK_AMZ_TRENDING;
     window._amzTrending = items;
     const hero = items[0];
     const rest = items.slice(1, 5);
@@ -8673,13 +8648,8 @@ async function loadAliExpressDeals() {
   const listEl = document.getElementById('ali-deals-list');
   if (!listEl) return;
   try {
-    const cached = apiCache('alideals', CACHE_TTL_2H);
-    let items;
-    if (cached) { items = cached; } else {
-      items = await fetchAliExpress('trending deals best seller');
-      if (!items.length) items = FALLBACK_ALI_DEALS;
-      apiCacheSet('alideals', items);
-    }
+    let items = await fetchAliExpress('trending deals best seller');
+    if (!items.length) items = FALLBACK_ALI_DEALS;
     window._aliDeals = items.slice(0, 6);
     listEl.innerHTML = window._aliDeals.map((p, i) => {
       const savings = p.originalPrice && p.originalPrice > p.price ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
@@ -8738,13 +8708,8 @@ async function loadAmazonDealsCarousel() {
   const el = document.getElementById('amazon-deals-carousel');
   if (!el) return;
   try {
-    const cached = apiCache('amzdealscarousel', CACHE_TTL_2H);
-    let deals;
-    if (cached) { deals = cached; } else {
-      deals = await fetchAmazonDeals();
-      if (!deals.length) deals = FALLBACK_FLASH_DEALS;
-      apiCacheSet('amzdealscarousel', deals);
-    }
+    let deals = await fetchAmazonDeals();
+    if (!deals.length) deals = FALLBACK_FLASH_DEALS;
     window._flashDeals = deals;
     el.innerHTML = deals.map((p, i) => `
       <div style="min-width:155px;max-width:155px;scroll-snap-align:start;background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden;flex-shrink:0;cursor:pointer;" onclick="viewProductDetail(window._flashDeals[${i}])">
@@ -10145,6 +10110,9 @@ function clearAllData() {
 }
 
 // ─── FACEBOOK MARKETPLACE ───
+const fbmCache = {};
+const FBM_CACHE_TTL = 10 * 60 * 1000;
+
 function tryGetUserLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -10157,9 +10125,8 @@ function tryGetUserLocation() {
 
 async function fetchFBMarketplace(query) {
   const cacheKey = 'fbm_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_4H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFBMFallbackProducts(query);
+  const now = Date.now();
+  if (fbmCache[cacheKey] && (now - fbmCache[cacheKey].ts < FBM_CACHE_TTL)) return fbmCache[cacheKey].data;
 
   let lat = 40.7128, lng = -74.006;
   try {
@@ -10168,7 +10135,6 @@ async function fetchFBMarketplace(query) {
   } catch(e) {}
 
   try {
-    apiCallCount();
     const url = `https://facebook-scraper3.p.rapidapi.com/marketplace/search?query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}`;
     const r = await fetch(url, {
       headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "facebook-scraper3.p.rapidapi.com" }
@@ -10223,7 +10189,7 @@ async function fetchFBMarketplace(query) {
           store: "Facebook"
         };
       });
-      apiCacheSet(cacheKey, normalized);
+      fbmCache[cacheKey] = { ts: now, data: normalized };
       return normalized;
     }
   } catch(e) { console.warn("FB Marketplace API:", e.message); }
@@ -10504,12 +10470,6 @@ async function loadFBMHome(cat) {
   fbmHomeCat = cat || 'trending';
   const el = document.getElementById('fbm-home-scroll');
   if (!el) return;
-
-  // Check localStorage cache first (4hr TTL)
-  const fbmCacheKey = 'fbmhome_' + fbmHomeCat;
-  const cachedCards = apiCache(fbmCacheKey, CACHE_TTL_4H);
-  if (cachedCards) { renderFBMHome(cachedCards); return; }
-
   el.innerHTML = '<div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>';
 
   const products = FBM_FLIP_PRODUCTS[fbmHomeCat] || FBM_FLIP_PRODUCTS.trending;
@@ -10521,6 +10481,7 @@ async function loadFBMHome(cat) {
         fetchFBMarketplace(name),
         fetchWalmart(name)
       ]);
+      // Prefer RAH store product if available, else Amazon
       let store = storeResults[0] || null;
       if (wmResults.length > 0) {
         autoImportWalmartToStore(wmResults.slice(0, 3));
@@ -10528,6 +10489,7 @@ async function loadFBMHome(cat) {
         if (rahProduct) store = rahProduct;
       }
       const fbRaw = fbResults.filter(r => r.price > 0);
+      // Add 10-20% markup to FB prices for better margin display
       const fbPrices = fbRaw.map(r => ({...r, price: +(r.price * (1 + 0.10 + Math.random() * 0.10)).toFixed(2)}));
       const avgFB = fbPrices.length ? +(fbPrices.reduce((s,r)=>s+r.price,0)/fbPrices.length).toFixed(2) : 0;
       return { name, store, avgFB, fbCount: fbPrices.length };
@@ -10536,7 +10498,6 @@ async function loadFBMHome(cat) {
     }
   }));
 
-  apiCacheSet(fbmCacheKey, cards);
   renderFBMHome(cards);
 }
 
@@ -10846,12 +10807,7 @@ function hideNavSearch() {
 
 // ─── AMAZON API ───
 async function fetchAmazon(query, sortBy="RELEVANCE") {
-  const cacheKey = 'amz_' + query.toLowerCase().trim() + '_' + sortBy;
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('amazon', query);
   try {
-    apiCallCount();
     const url = "https://real-time-amazon-data.p.rapidapi.com/search?query="+encodeURIComponent(query)+"&page=1&country=US&sort_by="+sortBy+"&product_condition=ALL&is_prime=false";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
     const d = await r.json();
@@ -10865,11 +10821,9 @@ async function fetchAmazon(query, sortBy="RELEVANCE") {
       reviews: p.product_num_ratings,
       store: "Amazon"
     }));
-    if (products.length > 0 && products[0].price > 0) { apiCacheSet(cacheKey, products); return products; }
+    if (products.length > 0 && products[0].price > 0) return products;
   } catch(e) { console.error("Amazon API:", e); }
-  const fb = getFallbackProducts('amazon', query);
-  apiCacheSet(cacheKey, fb);
-  return fb;
+  return getFallbackProducts('amazon', query);
 }
 
 // ─── EBAY API ───
@@ -10896,39 +10850,27 @@ function mapEbayProducts(items, query) {
 }
 
 async function fetchEbay(query) {
-  const cacheKey = 'ebay_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) { const fb = getFallbackProducts('ebay', query); apiCacheSet(cacheKey, fb); return fb; }
   const ebayHeaders = { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-ebay-data.p.rapidapi.com" };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      apiCallCount();
       const url = "https://real-time-ebay-data.p.rapidapi.com/search_more?query="+encodeURIComponent(query)+"&tld=com";
       const r = await fetch(url, { headers: ebayHeaders });
       const d = await r.json();
       const items = d.body?.products || [];
-      if (items.length > 0) { const products = mapEbayProducts(items, query); apiCacheSet(cacheKey, products); return products; }
+      if (items.length > 0) return mapEbayProducts(items, query);
       if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
     } catch(e) {
       console.log("eBay fetch attempt "+(attempt+1)+" failed:", e);
       if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
     }
   }
-  const fb = getFallbackProducts('ebay', query);
-  apiCacheSet(cacheKey, fb);
-  return fb;
+  return getFallbackProducts('ebay', query);
 }
 
 // ─── ALIEXPRESS API ───
 async function fetchAliExpress(query, sort="default") {
-  const cacheKey = 'ali_' + query.toLowerCase().trim() + '_' + sort;
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) { const fb = getFallbackProducts('aliexpress', query); apiCacheSet(cacheKey, fb); return fb; }
   // Primary: try AliExpress Datahub API
   try {
-    apiCallCount();
     const url = "https://aliexpress-datahub.p.rapidapi.com/item_search_2?q="+encodeURIComponent(query)+"&sort="+sort+"&page=1";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "aliexpress-datahub.p.rapidapi.com" } });
     if (r.status === 200) {
@@ -10956,15 +10898,11 @@ async function fetchAliExpress(query, sort="default") {
             store: "AliExpress"
           };
         }).filter(p => p.image && p.price > 0);
-        if (list.length > 0) { apiCacheSet(cacheKey, list); }
-        return list;
       }
     }
   } catch(e) { console.log("AliExpress primary failed:", e); }
   // Fallback: use Amazon API data with AliExpress affiliate search links
-  if (apiBudgetExceeded()) { const fb = getFallbackProducts('aliexpress', query); apiCacheSet(cacheKey, fb); return fb; }
   try {
-    apiCallCount();
     const url = "https://real-time-amazon-data.p.rapidapi.com/search?query="+encodeURIComponent(query)+"&page=1&country=US&sort_by=LOWEST_PRICE";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
     const d = await r.json();
@@ -10989,20 +10927,21 @@ async function fetchAliExpress(query, sort="default") {
       });
     }
   } catch(e) { console.log("AliExpress fallback failed:", e); }
-  const fb = getFallbackProducts('aliexpress', query);
-  apiCacheSet(cacheKey, fb);
-  return fb;
+  return getFallbackProducts('aliexpress', query);
 }
 
 // ─── WALMART DATA API ───
+const walmartCache = {};
+const WALMART_CACHE_TTL = 10 * 60 * 1000;
+
 async function fetchWalmart(query) {
+  const now = Date.now();
   const cacheKey = 'wm_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) { const fb = getFallbackProducts('walmart', query); apiCacheSet(cacheKey, fb); return fb; }
+  if (walmartCache[cacheKey] && (now - walmartCache[cacheKey].ts < WALMART_CACHE_TTL)) {
+    return walmartCache[cacheKey].data;
+  }
   // Try Walmart Data API first
   try {
-    apiCallCount();
     const url = "https://walmart-data.p.rapidapi.com/search?query=" + encodeURIComponent(query) + "&page=1";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "walmart-data.p.rapidapi.com" } });
     const d = await r.json();
@@ -11018,37 +10957,41 @@ async function fetchWalmart(query) {
         const reviews = parseInt(p.reviews_count || p.num_reviews || p.reviews?.totalReviewCount || 0) || 0;
         return { title, price, originalPrice: origPrice > price ? origPrice : null, image, link, rating: rating || null, reviews: reviews || null, store: "Walmart", rawLink: link };
       }).filter(p => p.price > 0);
-      if (products.length > 0) { apiCacheSet(cacheKey, products); return products; }
+      if (products.length > 0) {
+        walmartCache[cacheKey] = { ts: now, data: products };
+        return products;
+      }
     }
   } catch(e) { console.log("Walmart API failed, using sourcing fallback:", e); }
-  // Fallback: source products from Amazon with different sort
-  if (!apiBudgetExceeded()) {
-    try {
-      apiCallCount();
-      const url = "https://real-time-amazon-data.p.rapidapi.com/search?query="+encodeURIComponent(query + " best seller")+"&page=1&country=US&sort_by=BEST_SELLERS&product_condition=ALL&is_prime=true";
-      const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
-      const d = await r.json();
-      const items = (d.data?.products || []).slice(0, 15);
-      if (items.length > 0) {
-        const products = items.map(p => {
-          const price = parseFloat((p.product_price||"0").replace(/[^0-9.]/g,"")) || 0;
-          const origPrice = p.product_original_price ? parseFloat(p.product_original_price.replace(/[^0-9.]/g,"")) : null;
-          return {
-            title: p.product_title || "Product", price,
-            originalPrice: origPrice && origPrice > price ? origPrice : null,
-            image: p.product_photo || "",
-            link: "https://www.walmart.com/search?q=" + encodeURIComponent((p.product_title||query).substring(0,50)),
-            rating: p.product_star_rating || null, reviews: p.product_num_ratings || null,
-            store: "Walmart", rawLink: ""
-          };
-        }).filter(p => p.price > 0);
-        if (products.length > 0) { apiCacheSet(cacheKey, products); return products; }
+  // Fallback: source products from Amazon with different sort to get unique inventory for our store
+  try {
+    const url = "https://real-time-amazon-data.p.rapidapi.com/search?query="+encodeURIComponent(query + " best seller")+"&page=1&country=US&sort_by=BEST_SELLERS&product_condition=ALL&is_prime=true";
+    const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
+    const d = await r.json();
+    const items = (d.data?.products || []).slice(0, 15);
+    if (items.length > 0) {
+      const products = items.map(p => {
+        const price = parseFloat((p.product_price||"0").replace(/[^0-9.]/g,"")) || 0;
+        const origPrice = p.product_original_price ? parseFloat(p.product_original_price.replace(/[^0-9.]/g,"")) : null;
+        return {
+          title: p.product_title || "Product",
+          price,
+          originalPrice: origPrice && origPrice > price ? origPrice : null,
+          image: p.product_photo || "",
+          link: "https://www.walmart.com/search?q=" + encodeURIComponent((p.product_title||query).substring(0,50)),
+          rating: p.product_star_rating || null,
+          reviews: p.product_num_ratings || null,
+          store: "Walmart",
+          rawLink: ""
+        };
+      }).filter(p => p.price > 0);
+      if (products.length > 0) {
+        walmartCache[cacheKey] = { ts: now, data: products };
+        return products;
       }
-    } catch(e) { console.log("Walmart sourcing fallback failed:", e); }
-  }
-  const fb = getFallbackProducts('walmart', query);
-  apiCacheSet(cacheKey, fb);
-  return fb;
+    }
+  } catch(e) { console.log("Walmart sourcing fallback failed:", e); }
+  return getFallbackProducts('walmart', query);
 }
 
 // Convert Walmart products to store products with markup
@@ -11155,7 +11098,8 @@ function autoImportAmazonToStore(amazonProducts) {
 }
 
 // ─── AMAZON API EXTENDED ENDPOINTS ──────────────────────────────────
-// Amazon detail cache now uses apiCache/apiCacheSet
+const amazonDetailCache = {};
+const AMAZON_DETAIL_TTL = 10 * 60 * 1000;
 
 function extractAsin(url) {
   if (!url) return null;
@@ -11166,12 +11110,7 @@ function extractAsin(url) {
 let _flashDealPage = 1;
 async function fetchAmazonDeals(page) {
   const pg = page || _flashDealPage;
-  const cacheKey = 'amzdeals_' + pg;
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return [];
   try {
-    apiCallCount();
     const url = "https://real-time-amazon-data.p.rapidapi.com/deals-v2?country=US&page=" + pg;
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
     const d = await r.json();
@@ -11194,19 +11133,12 @@ async function fetchAmazonDeals(page) {
         asin: deal.product_asin || null
       };
     });
-    if (deals.length > 0) apiCacheSet(cacheKey, deals);
-    return deals;
   } catch(e) { console.log("Amazon Deals failed:", e); return []; }
 }
 
 async function fetchAmazonBestSellers(category) {
-  const cat = category || "aps";
-  const cacheKey = 'amzbs_' + cat;
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return [];
   try {
-    apiCallCount();
+    const cat = category || "aps";
     const url = "https://real-time-amazon-data.p.rapidapi.com/best-sellers?category=" + encodeURIComponent(cat) + "&type=BEST_SELLERS&page=1&country=US";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com" } });
     const d = await r.json();
@@ -11222,8 +11154,6 @@ async function fetchAmazonBestSellers(category) {
       store: "Amazon",
       asin: p.asin || extractAsin(p.product_url)
     }));
-    if (items.length > 0) apiCacheSet(cacheKey, items);
-    return items;
   } catch(e) { console.log("Amazon BestSellers failed:", e); return []; }
 }
 
@@ -11373,14 +11303,14 @@ function extractAliItemId(url) {
 }
 
 // ─── BEST BUY FETCH ─────────────────────────────────────────────────
+const bbCache = {};
+const BB_CACHE_TTL = 10 * 60 * 1000;
 async function fetchBestBuy(query) {
   if (!isPro()) return [];
   const cacheKey = 'bb_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('bestbuy', query);
+  const now = Date.now();
+  if (bbCache[cacheKey] && (now - bbCache[cacheKey].ts < BB_CACHE_TTL)) return bbCache[cacheKey].data;
   try {
-    apiCallCount();
     const url = "https://bestbuy-usa.p.rapidapi.com/search?query=" + encodeURIComponent(query);
     const r = await fetch(url, {
       headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "bestbuy-usa.p.rapidapi.com" }
@@ -11398,7 +11328,10 @@ async function fetchBestBuy(query) {
         const reviews = p.reviewCount || p.review_count || p.totalReviews || null;
         return { title, price, originalPrice: origPrice > price ? origPrice : null, image, link, rating, reviews, store: "BestBuy" };
       }).filter(p => p.price > 0);
-      if (products.length > 0) { apiCacheSet(cacheKey, products); return products; }
+      if (products.length > 0) {
+        bbCache[cacheKey] = { ts: now, data: products };
+        return products;
+      }
     }
   } catch(e) { console.error("Best Buy API:", e); }
   return getFallbackProducts('bestbuy', query);
@@ -11444,6 +11377,8 @@ function openShopifyStore(url, name) {
 }
 
 // ─── SHOPIFY FETCH ──────────────────────────────────────────────────
+const shopifyCache = {};
+const SHOPIFY_CACHE_TTL = 10 * 60 * 1000;
 const SHOPIFY_STORES = {
   electronics: [
     "https://shop.flipperzero.one/collections/all/products/flipper-zero",
@@ -11470,9 +11405,8 @@ const SHOPIFY_STORES = {
 };
 async function fetchShopify(query) {
   const cacheKey = 'shopify_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('shopify', query);
+  const now = Date.now();
+  if (shopifyCache[cacheKey] && (now - shopifyCache[cacheKey].ts < SHOPIFY_CACHE_TTL)) return shopifyCache[cacheKey].data;
   const q = query.toLowerCase();
   let cat = 'default';
   if (q.includes('electron') || q.includes('tech') || q.includes('gadget') || q.includes('keyboard') || q.includes('charger')) cat = 'electronics';
@@ -11483,7 +11417,6 @@ async function fetchShopify(query) {
   const products = [];
   for (const pUrl of urls) {
     try {
-      apiCallCount();
       const r = await fetch("https://shopify-fast-scraper.p.rapidapi.com/product?url=" + encodeURIComponent(pUrl), {
         headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "shopify-fast-scraper.p.rapidapi.com" }
       });
@@ -11507,24 +11440,22 @@ async function fetchShopify(query) {
     } catch(e) { /* skip failed product */ }
     if (products.length >= 5) break;
   }
-  if (products.length > 0) { apiCacheSet(cacheKey, products); return products; }
+  if (products.length > 0) {
+    shopifyCache[cacheKey] = { ts: now, data: products };
+    return products;
+  }
   return getFallbackProducts('shopify', query);
 }
 
 // ─── SEPHORA FETCH (PREMIUM) ────────────────────────────────────────
 async function fetchSephora(query) {
   if (!isPro()) return [];
-  const cacheKey = 'sephora_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('sephora', query);
   try {
-    apiCallCount();
     const url = "https://sephora.p.rapidapi.com/us/products/v2/search?q=" + encodeURIComponent(query) + "&currentPage=1&pageSize=20";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "sephora.p.rapidapi.com" } });
     const d = await r.json();
     const items = d.products || d.data?.products || [];
-    const products = items.filter(p => p.currentSku?.listPrice || p.listPrice).map(p => ({
+    return items.filter(p => p.currentSku?.listPrice || p.listPrice).map(p => ({
       title: p.displayName || p.productName || p.brandName + ' ' + (p.displayName||''),
       price: parseFloat(p.currentSku?.listPrice || p.listPrice || 0),
       originalPrice: parseFloat(p.currentSku?.valuePrice || p.regularPrice || 0) || null,
@@ -11534,8 +11465,6 @@ async function fetchSephora(query) {
       rating: p.rating || 0,
       reviews: p.reviews || 0
     }));
-    if (products.length > 0) apiCacheSet(cacheKey, products);
-    return products;
   } catch(e) {
     console.error('Sephora fetch error:', e);
     return getFallbackProducts('sephora', query);
@@ -11545,17 +11474,12 @@ async function fetchSephora(query) {
 // ─── TARGET FETCH (PREMIUM) ─────────────────────────────────────────
 async function fetchTarget(query) {
   if (!isPro()) return [];
-  const cacheKey = 'target_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('target', query);
   try {
-    apiCallCount();
     const url = "https://target-com-shopping-api.p.rapidapi.com/product/search?store_id=911&keyword=" + encodeURIComponent(query) + "&count=20&offset=0";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "target-com-shopping-api.p.rapidapi.com" } });
     const d = await r.json();
     const items = d.data?.search?.products || d.products || [];
-    const products = items.filter(p => p.price?.current_retail || p.price?.regular_price).map(p => ({
+    return items.filter(p => p.price?.current_retail || p.price?.regular_price).map(p => ({
       title: p.item?.product_description?.title || p.title || '',
       price: parseFloat(p.price?.current_retail || p.price?.regular_price || 0),
       originalPrice: p.price?.reg_retail ? parseFloat(p.price.reg_retail) : null,
@@ -11565,8 +11489,6 @@ async function fetchTarget(query) {
       rating: p.ratings_and_reviews?.statistics?.rating?.average || 0,
       reviews: p.ratings_and_reviews?.statistics?.review_count || 0
     }));
-    if (products.length > 0) apiCacheSet(cacheKey, products);
-    return products;
   } catch(e) {
     console.error('Target fetch error:', e);
     return getFallbackProducts('target', query);
@@ -11576,17 +11498,12 @@ async function fetchTarget(query) {
 // ─── IKEA FETCH (PREMIUM) ───────────────────────────────────────────
 async function fetchIKEA(query) {
   if (!isPro()) return [];
-  const cacheKey = 'ikea_' + query.toLowerCase().trim();
-  const cached = apiCache(cacheKey, CACHE_TTL_2H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return getFallbackProducts('ikea', query);
   try {
-    apiCallCount();
     const url = "https://ikea-api.p.rapidapi.com/keywordSearch?keyword=" + encodeURIComponent(query) + "&countryCode=us&languageCode=en";
     const r = await fetch(url, { headers: { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "ikea-api.p.rapidapi.com" } });
     const d = await r.json();
     const items = d.products || d.data || d.items || [];
-    const products = items.filter(p => p.price?.currentPrice || p.salesPrice?.numeral).map(p => ({
+    return items.filter(p => p.price?.currentPrice || p.salesPrice?.numeral).map(p => ({
       title: p.name || p.title || '',
       price: parseFloat(p.price?.currentPrice || p.salesPrice?.numeral || 0),
       originalPrice: p.price?.discountedPrice ? parseFloat(p.price.currentPrice) : null,
@@ -11596,8 +11513,6 @@ async function fetchIKEA(query) {
       rating: p.rating || 0,
       reviews: p.reviewCount || 0
     }));
-    if (products.length > 0) apiCacheSet(cacheKey, products);
-    return products;
   } catch(e) {
     console.error('IKEA fetch error:', e);
     return getFallbackProducts('ikea', query);
@@ -13118,15 +13033,6 @@ async function loadRAHProductsFromAPI() {
   if (immediateFallback.length > 0 && myStoreProducts.filter(p => p.active !== false && p.price > 0).length === 0) {
     autoImportWalmartToStore(immediateFallback);
   }
-  // Skip API calls if we already have enough store products cached
-  if (myStoreProducts.filter(p => p.active !== false && p.price > 0).length >= 10) return;
-  // Check composite cache
-  const cached = apiCache('rah_store_products', CACHE_TTL_4H);
-  if (cached) {
-    if (cached.walmart && cached.walmart.length > 0) autoImportWalmartToStore(cached.walmart);
-    if (cached.amazon && cached.amazon.length > 0) autoImportAmazonToStore(cached.amazon);
-    return;
-  }
   // Then try real APIs in background for better data
   const walmartQueries = ['electronics deals', 'home essentials', 'fashion accessories', 'toys clearance', 'kitchen gadgets', 'beauty products'];
   const amazonQueries = ['best sellers electronics', 'trending gadgets', 'popular shoes', 'wireless earbuds', 'phone accessories', 'smart home devices'];
@@ -13142,7 +13048,6 @@ async function loadRAHProductsFromAPI() {
     const amazonAll = amazonResults.flat();
     if (walmartAll.length > 0) autoImportWalmartToStore(walmartAll);
     if (amazonAll.length > 0) autoImportAmazonToStore(amazonAll);
-    apiCacheSet('rah_store_products', { walmart: walmartAll, amazon: amazonAll });
   } catch(e) { console.error('RAH product load error:', e); }
 }
 
@@ -13596,15 +13501,6 @@ async function loadFeaturedProducts() {
   const btn = document.getElementById('featured-refresh-btn');
   if (btn) { btn.style.transform = 'rotate(360deg)'; btn.style.transition = 'transform 0.6s ease'; }
 
-  const cachedFeat = apiCache('featured_products', CACHE_TTL_4H);
-  if (cachedFeat) {
-    featuredAll = cachedFeat;
-    renderFeaturedCards();
-    featuredLoading = false;
-    setTimeout(() => { if (btn) { btn.style.transform = 'rotate(0deg)'; btn.style.transition = 'none'; } }, 700);
-    return;
-  }
-
   const q = getDailyQuery();
   const [amz, ebay, ali, wm] = await Promise.all([
     fetchAmazon(q),
@@ -13615,7 +13511,6 @@ async function loadFeaturedProducts() {
   if (wm.length > 0) autoImportWalmartToStore(wm);
   const storeItems = walmartToStoreProducts(wm);
   featuredAll = mixProducts([storeItems, amz, ebay, ali]).slice(0, 24);
-  apiCacheSet('featured_products', featuredAll);
   renderFeaturedCards();
   featuredLoading = false;
 
@@ -13627,7 +13522,6 @@ async function loadFeaturedProducts() {
 
 async function refreshFeatured() {
   featuredAll = [];
-  try { localStorage.removeItem('apicache_featured_products'); } catch(e) {}
   await loadFeaturedProducts();
   toast('⭐ Featured products refreshed!', 'success');
 }
@@ -13696,6 +13590,9 @@ const AUCTION_CAT_QUERIES = {
 };
 
 // ─── REAL EBAY AUCTION FETCHER ───
+const auctionCache = {};
+const AUCTION_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 function getCatEmoji(cat) {
   const emojis = {electronics:'🖥',collectibles:'🃏',pallets:'📦',gaming:'🎮',hot:'🔥'};
   return emojis[cat] || '📦';
@@ -13707,17 +13604,17 @@ function assignCategory(index) {
 }
 
 async function fetchEbayAuctions(cat) {
+  const now = Date.now();
   const cacheKey = 'auction_' + cat;
-  const cached = apiCache(cacheKey, CACHE_TTL_1H);
-  if (cached) return cached;
-  if (apiBudgetExceeded()) return [];
+  if (auctionCache[cacheKey] && (now - auctionCache[cacheKey].ts < AUCTION_CACHE_TTL)) {
+    return auctionCache[cacheKey].data;
+  }
 
   const query = AUCTION_CAT_QUERIES[cat] || AUCTION_CAT_QUERIES.hot;
 
   const ebayHeaders = { "x-rapidapi-key": RAPIDAPI_KEY, "x-rapidapi-host": "real-time-ebay-data.p.rapidapi.com" };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      apiCallCount();
       const url = "https://real-time-ebay-data.p.rapidapi.com/search_more?query="
         + encodeURIComponent(query + " auction") + "&tld=com&LH_Auction=1";
       const r = await fetch(url, { headers: ebayHeaders });
@@ -13767,7 +13664,7 @@ async function fetchEbayAuctions(cat) {
           };
         });
 
-        apiCacheSet(cacheKey, auctions);
+        auctionCache[cacheKey] = {ts: now, data: auctions};
         return auctions;
       }
       if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
@@ -13863,14 +13760,6 @@ async function loadRAHAuctions(cat) {
   homeAuctionCat = cat;
   const el = document.getElementById('home-auction-scroll');
   el.innerHTML = '<div class="auction-mini-skel"></div><div class="auction-mini-skel"></div><div class="auction-mini-skel"></div>';
-  const auctCacheKey = 'rahauctions_' + cat;
-  const cachedAuctions = apiCache(auctCacheKey, CACHE_TTL_1H);
-  if (cachedAuctions) {
-    homeAuctions = cachedAuctions;
-    renderHomeAuctions();
-    startAuctionTimers();
-    return;
-  }
   const query = AUCTION_CAT_QUERIES[cat] || AUCTION_CAT_QUERIES.hot;
   try {
     const wm = await fetchWalmart(query);
@@ -13881,7 +13770,6 @@ async function loadRAHAuctions(cat) {
     homeAuctions = generateRAHAuctionsFromStore(cat);
   }
   if (!homeAuctions.length) homeAuctions = generateRAHAuctionsFromStore(cat);
-  if (homeAuctions.length) apiCacheSet(auctCacheKey, homeAuctions);
   renderHomeAuctions();
   startAuctionTimers();
 }
