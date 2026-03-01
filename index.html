@@ -2233,15 +2233,96 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
         </div>
       </div>
 
-      <!-- ── COUPONS & DEALS ── -->
-      <div style="margin-bottom:1.25rem;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.65rem;">
-          <div class="section-title" style="margin-bottom:0;"><span>🎟</span> Coupons & Deals</div>
-          <button onclick="goTab('search');setTimeout(()=>{document.getElementById('search-input').value='coupon deals';doSearch()},300)" style="background:none;border:none;font-size:0.75rem;font-weight:800;color:var(--accent2);cursor:pointer;">See All ›</button>
+      <!-- ── DEALS & COUPONS (SWAPPED FROM BELOW) ── -->
+      <div class="proof-section" id="deals-gallery-section" style="margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <div class="section-title" style="margin-bottom:0;"><span>🎫</span> Deals & Coupons</div>
+          <div style="display:flex;align-items:center;gap:0.3rem;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.18);border-radius:10px;padding:0.18rem 0.5rem;">
+            <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;animation:livePulse 1.5s infinite;"></span>
+            <span style="font-size:0.6rem;font-weight:900;color:#ef4444;">NEW</span>
+          </div>
         </div>
-        <div id="coupons-deals-scroll" style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.6rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;">
-          <div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>
+        <div onclick="goTab('coupons')" style="cursor:pointer;position:relative;background:linear-gradient(135deg,#ff6b35,#f7c948,#ff6b35);border-radius:16px;padding:1.1rem;margin-bottom:0.75rem;overflow:hidden;">
+          <div style="position:absolute;top:-15px;right:-15px;width:70px;height:70px;background:rgba(255,255,255,0.15);border-radius:50%;"></div>
+          <div style="position:absolute;bottom:-10px;left:30%;width:50px;height:50px;background:rgba(255,255,255,0.1);border-radius:50%;"></div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="background:rgba(255,255,255,0.25);border-radius:14px;padding:0.6rem 0.75rem;backdrop-filter:blur(4px);">
+              <div style="font-size:1.8rem;line-height:1;">🏷️</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:0.65rem;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">Limited Time</div>
+              <div style="font-size:1.05rem;font-weight:900;color:#fff;">Up to 40% Off Top Flips</div>
+              <div style="font-size:0.68rem;color:rgba(255,255,255,0.85);margin-top:0.15rem;">Exclusive coupons for RAHub members</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:0.4rem 0.6rem;text-align:center;">
+              <div style="font-size:0.55rem;font-weight:800;color:#ef4444;letter-spacing:0.5px;">ENDS IN</div>
+              <div id="deals-gallery-timer" style="font-family:var(--font-mono);font-size:0.85rem;font-weight:900;color:#1a1a2e;">04:32:17</div>
+            </div>
+          </div>
         </div>
+        <div style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch;scrollbar-width:none;" id="deals-gallery-scroll">
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#232f3e,#37475a);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#f59e0b;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#fff;transform:rotate(15deg);">SAVE</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">📦</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Amazon</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#f59e0b;">15% OFF</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Electronics & Home</div>
+            <div style="margin-top:0.4rem;background:rgba(245,158,11,0.15);border:1px dashed rgba(245,158,11,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#f59e0b;letter-spacing:1px;">RAH15AMZ</span>
+            </div>
+          </div>
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#e53238,#c72c32);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#e53238;transform:rotate(15deg);">HOT</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">🛒</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">eBay</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#fff;">$10 OFF</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Orders $50+</div>
+            <div style="margin-top:0.4rem;background:rgba(255,255,255,0.12);border:1px dashed rgba(255,255,255,0.3);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fff;letter-spacing:1px;">RAHEBAY10</span>
+            </div>
+          </div>
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#ff4747,#e60023);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#fbbf24;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#1a1a2e;transform:rotate(15deg);">NEW</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">🔴</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">AliExpress</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#fff;">20% OFF</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">First Order Items</div>
+            <div style="margin-top:0.4rem;background:rgba(255,255,255,0.12);border:1px dashed rgba(255,255,255,0.3);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fff;letter-spacing:1px;">RAHNEW20</span>
+            </div>
+          </div>
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#0046be,#003399);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#fbbf24;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#1a1a2e;transform:rotate(15deg);">TOP</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">💙</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Best Buy</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#fbbf24;">$25 OFF</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Tech $100+</div>
+            <div style="margin-top:0.4rem;background:rgba(251,191,36,0.15);border:1px dashed rgba(251,191,36,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fbbf24;letter-spacing:1px;">RAHBB25</span>
+            </div>
+          </div>
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#0071dc,#004f9a);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#ffc220;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:900;color:#004f9a;transform:rotate(15deg);">DEAL</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">⭐</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Walmart</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#ffc220;">30% OFF</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Clearance Finds</div>
+            <div style="margin-top:0.4rem;background:rgba(255,194,32,0.15);border:1px dashed rgba(255,194,32,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#ffc220;letter-spacing:1px;">RAHWM30</span>
+            </div>
+          </div>
+          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#1a1a1a,#333);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-8px;right:-8px;background:#e75480;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:900;color:#fff;transform:rotate(15deg);">GLAM</div>
+            <div style="font-size:1.3rem;margin-bottom:0.3rem;">💄</div>
+            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Sephora</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#e75480;">FREE SHIP</div>
+            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">All Beauty Orders</div>
+            <div style="margin-top:0.4rem;background:rgba(231,84,128,0.15);border:1px dashed rgba(231,84,128,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
+              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#e75480;letter-spacing:1px;">RAHBEAUTY</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="goTab('coupons')" style="width:100%;padding:0.7rem;margin-top:0.65rem;background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(247,201,72,0.06));border:1.5px solid rgba(255,107,53,0.25);border-radius:14px;font-family:var(--font);font-size:0.82rem;font-weight:800;color:#ff6b35;cursor:pointer;transition:all 0.15s;">🎫 View All Coupons & Deals</button>
       </div>
 
       <!-- ── AMAZON TRENDING ── -->
@@ -2736,127 +2817,15 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
         </div>
       </div>
 
-      <!-- ══ DEALS & COUPONS GALLERY ══ -->
-      <div class="proof-section" id="deals-gallery-section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-          <div class="section-title" style="margin-bottom:0;"><span>🎫</span> Deals & Coupons</div>
-          <div style="display:flex;align-items:center;gap:0.3rem;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.18);border-radius:10px;padding:0.18rem 0.5rem;">
-            <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;animation:livePulse 1.5s infinite;"></span>
-            <span style="font-size:0.6rem;font-weight:900;color:#ef4444;">NEW</span>
-          </div>
+      <!-- ══ COUPONS & DEALS (SWAPPED FROM ABOVE) ══ -->
+      <div class="proof-section" style="margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.65rem;">
+          <div class="section-title" style="margin-bottom:0;"><span>🎟</span> Coupons & Deals</div>
+          <button onclick="goTab('coupons')" style="background:none;border:none;font-size:0.75rem;font-weight:800;color:var(--accent2);cursor:pointer;">See All ›</button>
         </div>
-
-        <!-- Featured Deal Banner -->
-        <div onclick="goTab('coupons')" style="cursor:pointer;position:relative;background:linear-gradient(135deg,#ff6b35,#f7c948,#ff6b35);border-radius:16px;padding:1.1rem;margin-bottom:0.75rem;overflow:hidden;">
-          <div style="position:absolute;top:-15px;right:-15px;width:70px;height:70px;background:rgba(255,255,255,0.15);border-radius:50%;"></div>
-          <div style="position:absolute;bottom:-10px;left:30%;width:50px;height:50px;background:rgba(255,255,255,0.1);border-radius:50%;"></div>
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <div style="background:rgba(255,255,255,0.25);border-radius:14px;padding:0.6rem 0.75rem;backdrop-filter:blur(4px);">
-              <div style="font-size:1.8rem;line-height:1;">🏷️</div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:0.65rem;font-weight:900;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">Limited Time</div>
-              <div style="font-size:1.05rem;font-weight:900;color:#fff;">Up to 40% Off Top Flips</div>
-              <div style="font-size:0.68rem;color:rgba(255,255,255,0.85);margin-top:0.15rem;">Exclusive coupons for RAHub members</div>
-            </div>
-            <div style="background:#fff;border-radius:10px;padding:0.4rem 0.6rem;text-align:center;">
-              <div style="font-size:0.55rem;font-weight:800;color:#ef4444;letter-spacing:0.5px;">ENDS IN</div>
-              <div id="deals-gallery-timer" style="font-family:var(--font-mono);font-size:0.85rem;font-weight:900;color:#1a1a2e;">04:32:17</div>
-            </div>
-          </div>
+        <div id="coupons-deals-scroll" style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.6rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;">
+          <div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>
         </div>
-
-        <!-- Coupon Cards Scroll -->
-        <div style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch;scrollbar-width:none;" id="deals-gallery-scroll">
-          <!-- Amazon -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#232f3e,#37475a);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#f59e0b;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#fff;transform:rotate(15deg);">SAVE</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">📦</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Amazon</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#f59e0b;">15% OFF</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Electronics & Home</div>
-            <div style="margin-top:0.4rem;background:rgba(245,158,11,0.15);border:1px dashed rgba(245,158,11,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#f59e0b;letter-spacing:1px;">RAH15AMZ</span>
-            </div>
-          </div>
-          <!-- eBay -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#e53238,#c72c32);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#e53238;transform:rotate(15deg);">HOT</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">🛒</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">eBay</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#fff;">$10 OFF</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Orders $50+</div>
-            <div style="margin-top:0.4rem;background:rgba(255,255,255,0.12);border:1px dashed rgba(255,255,255,0.3);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fff;letter-spacing:1px;">RAHEBAY10</span>
-            </div>
-          </div>
-          <!-- AliExpress -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#ff4747,#e60023);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#fbbf24;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#1a1a2e;transform:rotate(15deg);">NEW</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">🔴</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">AliExpress</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#fff;">20% OFF</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">First Order Items</div>
-            <div style="margin-top:0.4rem;background:rgba(255,255,255,0.12);border:1px dashed rgba(255,255,255,0.3);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fff;letter-spacing:1px;">RAHNEW20</span>
-            </div>
-          </div>
-          <!-- Best Buy -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#0046be,#003399);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#fbbf24;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:900;color:#1a1a2e;transform:rotate(15deg);">TOP</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">💙</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Best Buy</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#fbbf24;">$25 OFF</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Tech $100+</div>
-            <div style="margin-top:0.4rem;background:rgba(251,191,36,0.15);border:1px dashed rgba(251,191,36,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#fbbf24;letter-spacing:1px;">RAHBB25</span>
-            </div>
-          </div>
-          <!-- Walmart -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#0071dc,#004f9a);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#ffc220;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:900;color:#004f9a;transform:rotate(15deg);">DEAL</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">⭐</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Walmart</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#ffc220;">30% OFF</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">Clearance Finds</div>
-            <div style="margin-top:0.4rem;background:rgba(255,194,32,0.15);border:1px dashed rgba(255,194,32,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#ffc220;letter-spacing:1px;">RAHWM30</span>
-            </div>
-          </div>
-          <!-- Sephora -->
-          <div onclick="goTab('coupons')" style="cursor:pointer;min-width:145px;background:linear-gradient(145deg,#1a1a1a,#333);border-radius:14px;padding:0.75rem;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-8px;right:-8px;background:#e75480;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.45rem;font-weight:900;color:#fff;transform:rotate(15deg);">GLAM</div>
-            <div style="font-size:1.3rem;margin-bottom:0.3rem;">💄</div>
-            <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.15rem;">Sephora</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#e75480;">FREE SHIP</div>
-            <div style="font-size:0.58rem;color:rgba(255,255,255,0.5);margin-top:0.2rem;">All Beauty Orders</div>
-            <div style="margin-top:0.4rem;background:rgba(231,84,128,0.15);border:1px dashed rgba(231,84,128,0.4);border-radius:6px;padding:0.2rem;text-align:center;">
-              <span style="font-family:var(--font-mono);font-size:0.6rem;font-weight:900;color:#e75480;letter-spacing:1px;">RAHBEAUTY</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Stats Row -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:0.65rem;">
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.55rem;text-align:center;">
-            <div style="font-size:1.1rem;">🎯</div>
-            <div style="font-family:var(--font-mono);font-size:0.9rem;font-weight:900;color:var(--text);">238</div>
-            <div style="font-size:0.55rem;color:var(--sub);font-weight:700;">Active Coupons</div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.55rem;text-align:center;">
-            <div style="font-size:1.1rem;">💰</div>
-            <div style="font-family:var(--font-mono);font-size:0.9rem;font-weight:900;color:var(--green);">$12.4K</div>
-            <div style="font-size:0.55rem;color:var(--sub);font-weight:700;">Saved This Week</div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.55rem;text-align:center;">
-            <div style="font-size:1.1rem;">👥</div>
-            <div style="font-family:var(--font-mono);font-size:0.9rem;font-weight:900;color:var(--text);">4.2K</div>
-            <div style="font-size:0.55rem;color:var(--sub);font-weight:700;">Users Redeemed</div>
-          </div>
-        </div>
-
-        <!-- View All Button -->
-        <button onclick="goTab('coupons')" style="width:100%;padding:0.7rem;margin-top:0.65rem;background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(247,201,72,0.06));border:1.5px solid rgba(255,107,53,0.25);border-radius:14px;font-family:var(--font);font-size:0.82rem;font-weight:800;color:#ff6b35;cursor:pointer;transition:all 0.15s;">🎫 View All Coupons & Deals</button>
       </div>
 
       <!-- ══ PROOF — SUCCESS STORIES ══ -->
