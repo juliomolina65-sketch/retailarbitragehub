@@ -9643,11 +9643,11 @@ async function buyNowProduct(product) {
     const modal = btn ? btn.closest('div[style*=fixed]') : null;
     if (modal) modal.remove();
     // Open cart modal with checkout
-    document.getElementById('cart-panel').classList.add('open');
     document.getElementById('cart-items').style.display = 'none';
     document.getElementById('cart-footer').style.display = 'none';
     document.getElementById('cart-checkout-wrap').style.display = 'block';
     document.getElementById('cart-modal-title').textContent = '💳 Secure Checkout';
+    openModal('modal-cart');
     const stripe = getStripe();
     cartCheckout = await stripe.initEmbeddedCheckout({ clientSecret: data.clientSecret });
     cartCheckout.mount('#cart-checkout-mount');
@@ -10991,7 +10991,7 @@ async function fetchWalmart(query) {
       }
     }
   } catch(e) { console.log("Walmart sourcing fallback failed:", e); }
-  return [];
+  return getFallbackProducts('walmart', query);
 }
 
 // Convert Walmart products to store products with markup
@@ -11782,10 +11782,10 @@ function productCard(p, idx) {
     ? `<img src="${p.image}" onerror="this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<div class=prod-img-placeholder>${storeEmoji(p.store)}</div>')" onload="if(this.naturalWidth<150){this.onerror();return;}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;background:var(--card2);"/>`
     : `<div class="prod-img-placeholder">${storeEmoji(p.store)}</div>`;
   const detailJson = JSON.stringify({title:p.title,price:p.price,store:p.store,image:p.image||"",link:productUrl,originalPrice:p.originalPrice||0,rating:p.rating||0,reviews:p.reviews||0,flipLow:fl,flipHigh:fh}).replace(/'/g,"&#39;");
+  const isStore = p.store === getMyStoreName();
   const buyBtn = p.store==="AliExpress"
     ? `<button class="prod-btn btn-buy" onclick="event.stopPropagation();openAliLink('${p.rawLink||p.link}')">🛒 Buy</button>`
     : (isStore ? `<button class="prod-btn btn-buy" onclick="event.stopPropagation();viewProductDetail(${detailJson})">🛒 Buy</button>` : `<a class="prod-btn btn-buy" href="${p.link}" target="_blank" onclick="event.stopPropagation()">🛒 Buy</a>`);
-  const isStore = p.store === getMyStoreName();
   const urgency = getUrgencyTag(p.title, p.price, idx);
   return `<div class="prod-card" style="cursor:pointer;" onclick='viewProductDetail(${detailJson})'>
     <div class="prod-img-wrap">
@@ -12911,10 +12911,16 @@ function rahProductWithExtras(p) {
 function renderRAHHomeCarousel() {
   const el = document.getElementById('rah-home-carousel');
   if (!el) return;
-  const active = myStoreProducts.filter(p => p.active !== false && p.price > 0);
+  let active = myStoreProducts.filter(p => p.active !== false && p.price > 0);
   if (!active.length) {
+    // Load fallback products immediately so carousel renders instantly
+    const fallbackQueries = ['electronics', 'fashion', 'home', 'gaming'];
+    const immediateFallback = fallbackQueries.flatMap(q => getFallbackProducts('amazon', q));
+    if (immediateFallback.length > 0) autoImportWalmartToStore(immediateFallback);
+    active = myStoreProducts.filter(p => p.active !== false && p.price > 0);
+    // Also try real APIs in background for better data later
     loadRAHProductsFromAPI().then(() => { renderRAHHomeCarousel(); renderInstantWin(); renderHotToday(); });
-    return;
+    if (!active.length) return;
   }
   const shuffled = [...active].sort(() => Math.random() - 0.5).slice(0, 12);
   el.innerHTML = shuffled.map(p => productCard(rahProductWithExtras(p), 0)).join('');
@@ -13021,11 +13027,27 @@ function renderHotToday() {
 }
 
 async function loadRAHProductsFromAPI() {
-  const queries = ['electronics deals', 'home essentials', 'fashion accessories', 'toys clearance', 'kitchen gadgets', 'beauty products'];
+  // Load fallback products immediately so UI never shows empty
+  const fallbackQueries = ['electronics', 'fashion', 'home', 'gaming'];
+  const immediateFallback = fallbackQueries.flatMap(q => getFallbackProducts('walmart', q));
+  if (immediateFallback.length > 0 && myStoreProducts.filter(p => p.active !== false && p.price > 0).length === 0) {
+    autoImportWalmartToStore(immediateFallback);
+  }
+  // Then try real APIs in background for better data
+  const walmartQueries = ['electronics deals', 'home essentials', 'fashion accessories', 'toys clearance', 'kitchen gadgets', 'beauty products'];
+  const amazonQueries = ['best sellers electronics', 'trending gadgets', 'popular shoes', 'wireless earbuds', 'phone accessories', 'smart home devices'];
   try {
-    const results = await Promise.all(queries.slice(0, 3).map(q => fetchWalmart(q)));
-    const all = results.flat();
-    if (all.length > 0) autoImportWalmartToStore(all);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const [walmartResults, amazonResults] = await Promise.all([
+      Promise.all(walmartQueries.slice(0, 3).map(q => fetchWalmart(q))).catch(() => []),
+      Promise.all(amazonQueries.slice(0, 3).map(q => fetchAmazon(q))).catch(() => [])
+    ]);
+    clearTimeout(timeout);
+    const walmartAll = walmartResults.flat();
+    const amazonAll = amazonResults.flat();
+    if (walmartAll.length > 0) autoImportWalmartToStore(walmartAll);
+    if (amazonAll.length > 0) autoImportAmazonToStore(amazonAll);
   } catch(e) { console.error('RAH product load error:', e); }
 }
 
