@@ -7697,7 +7697,7 @@ function renderFeaturedCollection() {
     const color = storeColors[store] || 'var(--accent)';
     const emoji = storeEmojis[store] || '🏷';
 
-    return `<div onclick="viewProductDetail({title:'${p.title.replace(/'/g,"\\'")}',price:${p.price},store:'${store}',image:'${p.image}',link:'#',rating:4.5,reviews:120})" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.15s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+    return `<div onclick="viewProductDetail({title:'${p.title.replace(/'/g,"\\'")}',price:${p.price},store:'${store}',image:'${p.image}',link:'${(p.link||'').replace(/'/g,"\\'")}',rating:4.5,reviews:120})" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.15s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
       <div style="height:115px;display:flex;align-items:center;justify-content:center;padding:0.4rem;background:var(--card2);position:relative;">
         <img src="${p.image}" style="max-height:100%;max-width:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2.2rem>${emoji}</span>'"/>
         <div style="position:absolute;top:6px;left:6px;background:${color};color:#fff;font-size:0.45rem;font-weight:900;padding:0.1rem 0.35rem;border-radius:5px;display:flex;align-items:center;gap:0.2rem;">${emoji} ${store}</div>
