@@ -2233,6 +2233,17 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
         </div>
       </div>
 
+      <!-- ── COUPONS & DEALS ── -->
+      <div style="margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.65rem;">
+          <div class="section-title" style="margin-bottom:0;"><span>🎟</span> Coupons & Deals</div>
+          <button onclick="goTab('search');setTimeout(()=>{document.getElementById('search-input').value='coupon deals';doSearch()},300)" style="background:none;border:none;font-size:0.75rem;font-weight:800;color:var(--accent2);cursor:pointer;">See All ›</button>
+        </div>
+        <div id="coupons-deals-scroll" style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.6rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;">
+          <div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>
+        </div>
+      </div>
+
       <!-- ── AMAZON TRENDING ── -->
       <div style="margin-bottom:1.25rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.65rem;">
@@ -2626,14 +2637,14 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
         </div>
       </div>
 
-      <!-- ── FEATURED COLLECTION ── -->
+      <!-- ── NEW ARRIVALS ── -->
       <div style="margin-bottom:1.5rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-          <div class="section-title" style="margin-bottom:0;"><span>⭐</span> Featured Collection</div>
-          <button onclick="goTab('search');setTimeout(()=>{document.getElementById('search-input').value='featured deals';doSearch()},300)" style="background:none;border:none;font-size:0.75rem;font-weight:800;color:var(--accent2);cursor:pointer;">See All ›</button>
+          <div class="section-title" style="margin-bottom:0;"><span>🆕</span> New Arrivals</div>
+          <button onclick="goTab('search');setTimeout(()=>{document.getElementById('search-input').value='new arrivals';doSearch()},300)" style="background:none;border:none;font-size:0.75rem;font-weight:800;color:var(--accent2);cursor:pointer;">See All ›</button>
         </div>
-        <div id="featured-collection-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
-          <!-- Built by JS -->
+        <div id="new-arrivals-scroll" style="display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:0.6rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;">
+          <div class="fbm-skel"></div><div class="fbm-skel"></div><div class="fbm-skel"></div>
         </div>
       </div>
 
@@ -7673,47 +7684,77 @@ function renderHomeProStores() {
 }
 
 // ─── FEATURED COLLECTION ───
-function renderFeaturedCollection() {
-  const grid = document.getElementById('featured-collection-grid');
-  if (!grid) return;
+function renderFeaturedCollection() { renderNewArrivals(); }
+function renderNewArrivals() {
+  const el = document.getElementById('new-arrivals-scroll');
+  if (!el) return;
 
-  // Pull top products from stores with real matching images
+  // Mix products from multiple stores - all with real images
   const sources = [
-    ...getFallbackProducts('amazon','electronics').slice(0,2),
-    ...getFallbackProducts('amazon','fashion').slice(0,1),
-    ...getFallbackProducts('amazon','home').slice(0,1),
+    ...getFallbackProducts('amazon','electronics').slice(0,3),
+    ...getFallbackProducts('amazon','fashion').slice(0,2),
+    ...getFallbackProducts('amazon','home').slice(0,2),
     ...getFallbackProducts('amazon','gaming').slice(0,2),
-    ...getFallbackProducts('bestbuy','default').slice(0,2).map(p=>({...p, store:'Best Buy'})),
     ...getFallbackProducts('bestbuy','electronics').slice(0,2).map(p=>({...p, store:'Best Buy'})),
+    ...getFallbackProducts('bestbuy','default').slice(0,2).map(p=>({...p, store:'Best Buy'})),
   ];
-  // Shuffle and pick 4
-  const picks = sources.sort(() => Math.random() - 0.5).slice(0,4);
+  const picks = sources.sort(() => Math.random() - 0.5).slice(0, 10);
 
-  const storeColors = { 'Amazon':'#ff9900', 'Best Buy':'#0046be', 'eBay':'#e53238' };
-  const storeEmojis = { 'Amazon':'🟠', 'Best Buy':'🟦', 'eBay':'🔵' };
+  const storeColors = { 'Amazon':'#ff9900', 'Best Buy':'#0046be' };
 
-  grid.innerHTML = picks.map(p => {
-    const store = p.store || 'RetailArbitrageHub';
+  el.innerHTML = picks.map(p => {
+    const store = p.store || 'Amazon';
     const f = calcFlip(p.price, store);
     const profit = f[0] - p.price;
     const color = storeColors[store] || 'var(--accent)';
-    const emoji = storeEmojis[store] || '🏷';
+    const timeAgo = Math.floor(Math.random() * 12) + 1;
 
-    return `<div onclick="viewProductDetail({title:'${p.title.replace(/'/g,"\\'")}',price:${p.price},store:'${store}',image:'${p.image}',link:'${(p.link||'').replace(/'/g,"\\'")}',rating:4.5,reviews:120})" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;transition:transform 0.15s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
-      <div style="height:115px;display:flex;align-items:center;justify-content:center;padding:0.4rem;background:var(--card2);position:relative;">
-        <img src="${p.image}" style="max-height:100%;max-width:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2.2rem>${emoji}</span>'"/>
-        <div style="position:absolute;top:6px;left:6px;background:${color};color:#fff;font-size:0.45rem;font-weight:900;padding:0.1rem 0.35rem;border-radius:5px;display:flex;align-items:center;gap:0.2rem;">${emoji} ${store}</div>
-        <div style="position:absolute;top:6px;right:6px;background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.5rem;font-weight:900;padding:0.1rem 0.3rem;border-radius:5px;">+$${profit.toFixed(0)}</div>
+    return `<div onclick="viewProductDetail({title:'${p.title.replace(/'/g,"\\'")}',price:${p.price},store:'${store}',image:'${p.image}',link:'${(p.link||'').replace(/'/g,"\\'")}',rating:${p.rating||4.5},reviews:${p.reviews||120}})" style="min-width:155px;flex-shrink:0;background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden;scroll-snap-align:start;cursor:pointer;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+      <div style="height:110px;display:flex;align-items:center;justify-content:center;padding:0.4rem;background:var(--card2);position:relative;">
+        <img src="${p.image}" style="max-height:100%;max-width:100%;object-fit:contain;" referrerpolicy="no-referrer" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2rem>📦</span>'"/>
+        <div style="position:absolute;top:5px;left:5px;background:rgba(99,102,241,0.9);color:#fff;font-size:0.42rem;font-weight:900;padding:0.12rem 0.35rem;border-radius:5px;">NEW</div>
+        <div style="position:absolute;top:5px;right:5px;background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.48rem;font-weight:900;padding:0.1rem 0.3rem;border-radius:5px;">+$${profit.toFixed(0)}</div>
       </div>
-      <div style="padding:0.5rem 0.6rem;">
-        <div style="font-size:0.62rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.25rem;">${p.title}</div>
+      <div style="padding:0.45rem 0.55rem;">
+        <div style="font-size:0.58rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:0.2rem;">${p.title}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-family:var(--font-mono);font-size:0.82rem;font-weight:900;color:var(--text);">$${p.price.toFixed(2)}</span>
-          <span style="font-size:0.52rem;font-weight:700;color:var(--sub);">Flip →$${f[0]}</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:900;color:var(--green2);">$${p.price.toFixed(2)}</span>
+          <span style="font-size:0.45rem;color:var(--sub);">${timeAgo}h ago</span>
         </div>
+        <div style="font-size:0.42rem;color:${color};font-weight:800;margin-top:0.15rem;">${store}</div>
       </div>
     </div>`;
   }).join('');
+}
+
+// ─── COUPONS & DEALS ───
+function renderCouponsDeals() {
+  const el = document.getElementById('coupons-deals-scroll');
+  if (!el) return;
+  const coupons = [
+    { code: 'FLIP50', discount: '50% OFF', desc: '2nd Month Pro Membership', store: 'RetailArbitrageHub', color: '#22c55e', bg: 'linear-gradient(135deg,#22c55e,#16a34a)', expires: '3 days', action: 'openProModal()' },
+    { code: 'SAVE20', discount: '20% OFF', desc: 'Electronics Deals on Amazon', store: 'Amazon', color: '#ff9900', bg: 'linear-gradient(135deg,#ff9900,#f59e0b)', expires: '24 hrs', action: "window.open('https://www.amazon.com/deals','_blank')" },
+    { code: 'NEWUSER', discount: '$10 OFF', desc: 'First Order $50+', store: 'RetailArbitrageHub', color: '#6366f1', bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', expires: '7 days', action: 'openProModal()' },
+    { code: 'BESTDEAL', discount: '15% OFF', desc: 'Open Box Items at Best Buy', store: 'Best Buy', color: '#0046be', bg: 'linear-gradient(135deg,#0046be,#2563eb)', expires: '48 hrs', action: "window.open('https://www.bestbuy.com/site/misc/open-box/pcmcat748300659342.c','_blank')" },
+    { code: 'ALISHIP', discount: 'FREE SHIP', desc: 'Orders Over $5 on AliExpress', store: 'AliExpress', color: '#e53238', bg: 'linear-gradient(135deg,#e53238,#f43f5e)', expires: '5 days', action: "window.open('https://www.aliexpress.com','_blank')" },
+    { code: 'FLIPPER', discount: '25% OFF', desc: 'Pro Annual Plan', store: 'RetailArbitrageHub', color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b,#d97706)', expires: '14 days', action: 'openProModal()' },
+  ];
+  el.innerHTML = coupons.map(c => `
+    <div style="min-width:200px;flex-shrink:0;background:var(--card);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;scroll-snap-align:start;cursor:pointer;" onclick="${c.action}">
+      <div style="background:${c.bg};padding:0.65rem 0.75rem;position:relative;">
+        <div style="font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:0.5px;">${c.discount}</div>
+        <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.85);margin-top:0.15rem;">${c.desc}</div>
+        <div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.25);color:#fff;font-size:0.45rem;font-weight:800;padding:0.15rem 0.35rem;border-radius:6px;">Expires ${c.expires}</div>
+      </div>
+      <div style="padding:0.55rem 0.75rem;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-family:var(--font-mono);font-size:0.8rem;font-weight:900;color:${c.color};letter-spacing:1px;">${c.code}</div>
+          <div style="font-size:0.55rem;color:var(--sub);margin-top:0.1rem;">${c.store}</div>
+        </div>
+        <button onclick="event.stopPropagation();navigator.clipboard.writeText('${c.code}');toast('Coupon copied: ${c.code}','success')" style="background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:0.3rem 0.6rem;font-family:var(--font);font-size:0.6rem;font-weight:800;color:var(--text);cursor:pointer;">Copy</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ─── LIVE VIEWER COUNT ───
@@ -9884,6 +9925,7 @@ function initApp() {
   updateProLockLabels();
   renderHomeProStores();
   renderFeaturedCollection();
+  renderCouponsDeals();
   startLiveViewerCount();
   startActiveShoppersCount();
   startDealsGalleryTimer();
