@@ -2190,7 +2190,7 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
       </div>
 
       <div id="ebay-auction-disclaimer" style="display:none;background:rgba(68,138,255,0.08);border:1px solid rgba(68,138,255,0.2);border-radius:10px;padding:0.45rem 0.6rem;margin-bottom:0.5rem;font-size:0.62rem;color:var(--sub);line-height:1.5;">
-        <span style="font-weight:800;color:var(--text);">Note:</span> eBay auction data may not be 100% accurate. Prices and availability change fast — visit <a href="https://www.ebay.com" target="_blank" style="color:#448aff;font-weight:700;text-decoration:none;">eBay.com</a> for the latest listings.
+        <span style="font-weight:800;color:var(--text);">Note:</span> eBay auction data may not be 100% accurate. Prices and availability change fast — visit <a href="https://www.ebay.com?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339143367&customid=retailarbitragehub&toolid=10001&mkevt=1" target="_blank" style="color:#448aff;font-weight:700;text-decoration:none;">eBay.com</a> for the latest listings.
       </div>
       <!-- Auction horizontal scroll -->
       <div id="home-auction-scroll" style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.75rem;margin-bottom:0.5rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;">
@@ -3475,7 +3475,7 @@ body.dark-mode .filter-chip.locked{opacity:0.4;}
         <button class="filter-chip" onclick="setAuctionFilter('gaming',this)">🎮 Gaming</button>
       </div>
       <div id="ebay-auction-page-disclaimer" style="display:none;background:rgba(68,138,255,0.08);border:1px solid rgba(68,138,255,0.2);border-radius:10px;padding:0.45rem 0.6rem;margin-bottom:0.6rem;font-size:0.62rem;color:var(--sub);line-height:1.5;">
-        <span style="font-weight:800;color:var(--text);">Note:</span> eBay auction data may not be 100% accurate. Prices and availability change fast — visit <a href="https://www.ebay.com" target="_blank" style="color:#448aff;font-weight:700;text-decoration:none;">eBay.com</a> for the latest listings.
+        <span style="font-weight:800;color:var(--text);">Note:</span> eBay auction data may not be 100% accurate. Prices and availability change fast — visit <a href="https://www.ebay.com?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339143367&customid=retailarbitragehub&toolid=10001&mkevt=1" target="_blank" style="color:#448aff;font-weight:700;text-decoration:none;">eBay.com</a> for the latest listings.
       </div>
       <div id="auctions-list"></div>
     </div>
@@ -4705,6 +4705,12 @@ function makeEbayAffLink(url) {
   if (!url) return url;
   const sep = url.includes("?") ? "&" : "?";
   return url + sep + "mkcid=1&mkrid=" + EBAY_MKRID + "&siteid=0&campid=" + EBAY_CAMPAIGN_ID + "&customid=" + EBAY_CUSTOM_ID + "&toolid=10001&mkevt=1";
+}
+
+// ─── ALIEXPRESS SIMPLE AFFILIATE URL ───
+function aliAffUrl(url) {
+  if (!url || url === '#') return ALI_FALLBACK;
+  return ALI_FALLBACK + "?dl_target_url=" + encodeURIComponent(url);
 }
 
 // ─── ALIEXPRESS AFFILIATE LINK BUILDER ───
@@ -7705,7 +7711,7 @@ function renderCouponsDeals() {
     { code: 'SAVE20', discount: '20% OFF', desc: 'Electronics Deals on Amazon', store: 'Amazon', color: '#ff9900', bg: 'linear-gradient(135deg,#ff9900,#f59e0b)', expires: '24 hrs', action: "window.open('https://www.amazon.com/deals?tag="+AMAZON_AFF+"','_blank')" },
     { code: 'NEWUSER', discount: '$10 OFF', desc: 'First Order $50+', store: 'RetailArbitrageHub', color: '#6366f1', bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', expires: '7 days', action: 'openProModal()' },
     { code: 'BESTDEAL', discount: '15% OFF', desc: 'Open Box Items at Best Buy', store: 'Best Buy', color: '#0046be', bg: 'linear-gradient(135deg,#0046be,#2563eb)', expires: '48 hrs', action: "window.open('https://www.bestbuy.com/site/misc/open-box/pcmcat748300659342.c','_blank')" },
-    { code: 'ALISHIP', discount: 'FREE SHIP', desc: 'Orders Over $5 on AliExpress', store: 'AliExpress', color: '#e53238', bg: 'linear-gradient(135deg,#e53238,#f43f5e)', expires: '5 days', action: "window.open('https://www.aliexpress.com','_blank')" },
+    { code: 'ALISHIP', discount: 'FREE SHIP', desc: 'Orders Over $5 on AliExpress', store: 'AliExpress', color: '#e53238', bg: 'linear-gradient(135deg,#e53238,#f43f5e)', expires: '5 days', action: "window.open('"+ALI_FALLBACK+"','_blank')" },
     { code: 'FLIPPER', discount: '25% OFF', desc: 'Pro Annual Plan', store: 'RetailArbitrageHub', color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b,#d97706)', expires: '14 days', action: 'openProModal()' },
   ];
   el.innerHTML = coupons.map(c => `
@@ -8594,7 +8600,7 @@ function getCheapItemLink(store, title) {
   const q = encodeURIComponent(title);
   if (store === 'Amazon') return 'https://www.amazon.com/s?k=' + q + '&tag=' + AMAZON_AFF;
   if (store === 'eBay') return makeEbayAffLink('https://www.ebay.com/sch/i.html?_nkw=' + q);
-  if (store === 'AliExpress') return 'https://www.aliexpress.com/wholesale?SearchText=' + q;
+  if (store === 'AliExpress') return aliAffUrl('https://www.aliexpress.com/wholesale?SearchText=' + q);
   return 'https://www.amazon.com/s?k=' + q + '&tag=' + AMAZON_AFF;
 }
 
@@ -8743,12 +8749,12 @@ async function loadAliExpressDeals() {
 }
 
 const FALLBACK_ALI_DEALS = [
-  {title:"Wireless Bluetooth Earbuds TWS Noise Cancelling Headphones",price:8.99,originalPrice:29.99,image:"https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SX679_.jpg",store:"AliExpress",rating:4.5,reviews:5200,link:"https://aliexpress.com"},
-  {title:"Smart Watch Fitness Tracker Heart Rate Monitor Waterproof",price:12.49,originalPrice:39.99,image:"https://m.media-amazon.com/images/I/71lIkCx3qHL._AC_SX679_.jpg",store:"AliExpress",rating:4.3,reviews:8100,link:"https://aliexpress.com"},
-  {title:"Portable Mini Projector 4K HD Home Theater LED",price:45.99,originalPrice:129.99,image:"https://m.media-amazon.com/images/I/71GYTBND6KL._AC_SX679_.jpg",store:"AliExpress",rating:4.2,reviews:3400,link:"https://aliexpress.com"},
-  {title:"Electric Neck Massager Pulse Cervical Relief Device",price:6.99,originalPrice:24.99,image:"https://m.media-amazon.com/images/I/71jG+e7roXL._AC_SX679_.jpg",store:"AliExpress",rating:4.6,reviews:12000,link:"https://aliexpress.com"},
-  {title:"LED Strip Lights RGB 5M Smart WiFi App Control",price:3.99,originalPrice:15.99,image:"https://m.media-amazon.com/images/I/81bsw6fnO+L._AC_SX679_.jpg",store:"AliExpress",rating:4.4,reviews:22000,link:"https://aliexpress.com"},
-  {title:"Magnetic Phone Car Mount Dashboard Holder Universal",price:2.49,originalPrice:9.99,image:"https://m.media-amazon.com/images/I/61GNEp3auhL._AC_SX679_.jpg",store:"AliExpress",rating:4.7,reviews:45000,link:"https://aliexpress.com"},
+  {title:"Wireless Bluetooth Earbuds TWS Noise Cancelling Headphones",price:8.99,originalPrice:29.99,image:"https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SX679_.jpg",store:"AliExpress",rating:4.5,reviews:5200,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=Wireless+Bluetooth+Earbuds+TWS")},
+  {title:"Smart Watch Fitness Tracker Heart Rate Monitor Waterproof",price:12.49,originalPrice:39.99,image:"https://m.media-amazon.com/images/I/71lIkCx3qHL._AC_SX679_.jpg",store:"AliExpress",rating:4.3,reviews:8100,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=Smart+Watch+Fitness+Tracker")},
+  {title:"Portable Mini Projector 4K HD Home Theater LED",price:45.99,originalPrice:129.99,image:"https://m.media-amazon.com/images/I/71GYTBND6KL._AC_SX679_.jpg",store:"AliExpress",rating:4.2,reviews:3400,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=Mini+Projector+4K+HD")},
+  {title:"Electric Neck Massager Pulse Cervical Relief Device",price:6.99,originalPrice:24.99,image:"https://m.media-amazon.com/images/I/71jG+e7roXL._AC_SX679_.jpg",store:"AliExpress",rating:4.6,reviews:12000,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=Electric+Neck+Massager")},
+  {title:"LED Strip Lights RGB 5M Smart WiFi App Control",price:3.99,originalPrice:15.99,image:"https://m.media-amazon.com/images/I/81bsw6fnO+L._AC_SX679_.jpg",store:"AliExpress",rating:4.4,reviews:22000,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=LED+Strip+Lights+RGB+5M")},
+  {title:"Magnetic Phone Car Mount Dashboard Holder Universal",price:2.49,originalPrice:9.99,image:"https://m.media-amazon.com/images/I/61GNEp3auhL._AC_SX679_.jpg",store:"AliExpress",rating:4.7,reviews:45000,link:aliAffUrl("https://www.aliexpress.com/wholesale?SearchText=Magnetic+Phone+Car+Mount")},
 ];
 
 const FALLBACK_FLASH_DEALS = [
@@ -10958,7 +10964,7 @@ async function fetchAliExpress(query, sort="default") {
             title: item.title || "AliExpress Item",
             price, originalPrice: origPrice > price ? origPrice : null,
             image: img,
-            link: rawLink || ALI_FALLBACK,
+            link: rawLink ? aliAffUrl(rawLink) : ALI_FALLBACK,
             rawLink: rawLink,
             rating: item.averageStarRate, reviews: item.sales,
             store: "AliExpress"
@@ -10978,7 +10984,7 @@ async function fetchAliExpress(query, sort="default") {
         const price = parseFloat((p.product_price||"0").replace(/[^0-9.]/g,"")) || 0;
         const origPrice = p.product_original_price ? parseFloat(p.product_original_price.replace(/[^0-9.]/g,"")) : null;
         const title = (p.product_title||"AliExpress Item").substring(0,100);
-        const aliSearchUrl = "https://www.aliexpress.com/wholesale?SearchText="+encodeURIComponent(title.substring(0,50));
+        const aliSearchUrl = aliAffUrl("https://www.aliexpress.com/wholesale?SearchText="+encodeURIComponent(title.substring(0,50)));
         return {
           title,
           price: price > 0 ? +(price * 0.4).toFixed(2) : price,
@@ -11756,7 +11762,7 @@ function getFallbackProducts(store, query) {
     let link;
     const s = store.toLowerCase();
     if (s === 'ebay') link = makeEbayAffLink("https://www.ebay.com/sch/i.html?_nkw="+encodeURIComponent(p.title));
-    else if (s === 'aliexpress') link = "https://www.aliexpress.com/wholesale?SearchText="+encodeURIComponent(p.title);
+    else if (s === 'aliexpress') link = aliAffUrl("https://www.aliexpress.com/wholesale?SearchText="+encodeURIComponent(p.title));
     else if (s === 'bestbuy') link = "https://www.bestbuy.com/site/searchpage.jsp?st="+encodeURIComponent(p.title);
     else if (s === 'shopify') link = SHOPIFY;
     else if (s === 'sephora') link = "https://www.sephora.com/search?keyword="+encodeURIComponent(p.title);
@@ -14092,8 +14098,14 @@ function openAliLink(rawUrl) {
     window.open(ALI_FALLBACK, "_blank");
     return;
   }
+  // If already an affiliate link, open directly (don't double-wrap)
+  if (rawUrl.includes('s.click.aliexpress.com')) {
+    toast("🔗 Opening AliExpress deal...","success");
+    window.open(rawUrl, "_blank");
+    return;
+  }
   // Build affiliate deep link using AliExpress promotion URL
-  const affUrl = "https://s.click.aliexpress.com/e/_c4Naiyr1?dl_target_url=" + encodeURIComponent(rawUrl);
+  const affUrl = ALI_FALLBACK + "?dl_target_url=" + encodeURIComponent(rawUrl);
   toast("🔗 Opening AliExpress deal...","success");
   window.open(affUrl, "_blank");
 }
