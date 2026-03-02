@@ -8997,33 +8997,6 @@ function selectVariant(type, value, el) {
   });
   el.style.borderColor = 'var(--accent)';
   el.style.background = 'rgba(255,215,0,0.12)';
-  // Update product image tint when color changes
-  if (type === 'color') {
-    const img = document.getElementById('pd-main-img');
-    if (!img) return;
-    // Store original image src on first color click
-    if (!img.dataset.origSrc) img.dataset.origSrc = img.src;
-    // Color-to-filter map — applied directly to the product image
-    const colorFilters = {
-      'Black':   'brightness(0.4) saturate(0.1)',
-      'White':   'brightness(1.4) saturate(0.1) contrast(0.9)',
-      'Gray':    'brightness(0.75) saturate(0.1)',
-      'Grey':    'brightness(0.75) saturate(0.1)',
-      'Navy':    'brightness(0.45) saturate(1.6) hue-rotate(200deg)',
-      'Red':     'brightness(0.9) saturate(2.8) hue-rotate(330deg)',
-      'Blue':    'brightness(0.85) saturate(2) hue-rotate(190deg)',
-      'Green':   'brightness(0.85) saturate(2) hue-rotate(90deg)',
-      'Pink':    'brightness(1.15) saturate(2) hue-rotate(310deg)',
-      'Purple':  'brightness(0.85) saturate(2) hue-rotate(260deg)',
-      'Orange':  'brightness(1.0) saturate(2.5) hue-rotate(15deg)',
-      'Yellow':  'brightness(1.15) saturate(2.5) hue-rotate(40deg)',
-      'Brown':   'brightness(0.65) saturate(1.3) sepia(0.5) hue-rotate(350deg)',
-      'Beige':   'brightness(1.15) saturate(0.5) sepia(0.35)'
-    };
-    const filter = colorFilters[value] || 'none';
-    img.style.transition = 'filter 0.35s ease';
-    img.style.filter = filter;
-  }
 }
 
 function viewProductDetail(p) {
