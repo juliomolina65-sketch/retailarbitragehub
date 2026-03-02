@@ -9001,40 +9001,28 @@ function selectVariant(type, value, el) {
   if (type === 'color') {
     const img = document.getElementById('pd-main-img');
     if (!img) return;
-    const wrap = img.parentElement;
-    // Remove any existing overlay
-    const old = wrap.querySelector('.color-overlay');
-    if (old) old.remove();
-    // Color-to-filter map for realistic tinting
+    // Store original image src on first color click
+    if (!img.dataset.origSrc) img.dataset.origSrc = img.src;
+    // Color-to-filter map — applied directly to the product image
     const colorFilters = {
-      'Black':   'brightness(0.35) saturate(0.2)',
-      'White':   'brightness(1.35) saturate(0.15)',
-      'Gray':    'brightness(0.8) saturate(0.15)',
-      'Grey':    'brightness(0.8) saturate(0.15)',
-      'Navy':    'brightness(0.5) saturate(1.5) hue-rotate(200deg)',
-      'Red':     'saturate(2.5) hue-rotate(330deg)',
-      'Blue':    'saturate(1.8) hue-rotate(190deg)',
-      'Green':   'saturate(1.8) hue-rotate(90deg)',
-      'Pink':    'brightness(1.1) saturate(1.8) hue-rotate(310deg)',
-      'Purple':  'saturate(1.8) hue-rotate(260deg)',
-      'Orange':  'saturate(2) hue-rotate(15deg)',
-      'Yellow':  'brightness(1.1) saturate(2) hue-rotate(40deg)',
-      'Brown':   'brightness(0.7) saturate(1.2) hue-rotate(20deg) sepia(0.4)',
-      'Beige':   'brightness(1.1) saturate(0.6) sepia(0.3)'
+      'Black':   'brightness(0.4) saturate(0.1)',
+      'White':   'brightness(1.4) saturate(0.1) contrast(0.9)',
+      'Gray':    'brightness(0.75) saturate(0.1)',
+      'Grey':    'brightness(0.75) saturate(0.1)',
+      'Navy':    'brightness(0.45) saturate(1.6) hue-rotate(200deg)',
+      'Red':     'brightness(0.9) saturate(2.8) hue-rotate(330deg)',
+      'Blue':    'brightness(0.85) saturate(2) hue-rotate(190deg)',
+      'Green':   'brightness(0.85) saturate(2) hue-rotate(90deg)',
+      'Pink':    'brightness(1.15) saturate(2) hue-rotate(310deg)',
+      'Purple':  'brightness(0.85) saturate(2) hue-rotate(260deg)',
+      'Orange':  'brightness(1.0) saturate(2.5) hue-rotate(15deg)',
+      'Yellow':  'brightness(1.15) saturate(2.5) hue-rotate(40deg)',
+      'Brown':   'brightness(0.65) saturate(1.3) sepia(0.5) hue-rotate(350deg)',
+      'Beige':   'brightness(1.15) saturate(0.5) sepia(0.35)'
     };
-    const filter = colorFilters[value];
-    if (filter) {
-      // Add a color-tinted overlay using a copy of the image
-      const overlay = document.createElement('img');
-      overlay.className = 'color-overlay';
-      overlay.src = img.src;
-      overlay.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:' + filter + ';opacity:0.85;mix-blend-mode:color;pointer-events:none;transition:opacity 0.3s ease;border-radius:inherit;';
-      wrap.style.position = 'relative';
-      wrap.appendChild(overlay);
-      // Subtle flash animation
-      overlay.style.opacity = '0';
-      requestAnimationFrame(() => { overlay.style.opacity = '0.85'; });
-    }
+    const filter = colorFilters[value] || 'none';
+    img.style.transition = 'filter 0.35s ease';
+    img.style.filter = filter;
   }
 }
 
