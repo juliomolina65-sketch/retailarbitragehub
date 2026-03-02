@@ -8955,13 +8955,7 @@ function detectProductVariants(title) {
   else if (/pant|jean|short|trouser|legging|jogger|skirt/i.test(t)) {
     variants.sizes = ['28','30','32','34','36','38'];
   }
-  // Colors — detect from common color words in title
-  const colorMap = {'black':'#000','white':'#fff','red':'#ef4444','blue':'#3b82f6','green':'#22c55e','navy':'#1e3a5f','gray':'#6b7280','grey':'#6b7280','pink':'#ec4899','purple':'#8b5cf6','orange':'#f97316','yellow':'#eab308','brown':'#92400e','beige':'#d4a574'};
-  Object.keys(colorMap).forEach(c => { if (t.includes(c)) variants.colors.push(c.charAt(0).toUpperCase() + c.slice(1)); });
-  // If clothing but no colors detected, offer common ones
-  if (variants.sizes.length && !variants.colors.length) {
-    variants.colors = ['Black','White','Gray','Navy','Red'];
-  }
+  // No fake color options — we don't have real variant images for different colors
   return variants;
 }
 
