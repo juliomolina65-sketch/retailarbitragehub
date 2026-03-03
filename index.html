@@ -5936,6 +5936,13 @@ async function renderProfileDashboard(){
   document.getElementById("profile-phone").textContent     = p.phone ? "📞 "+p.phone : "";
   document.getElementById("profile-location").textContent  = p.location ? "📍 "+p.location : "";
 
+  // Auto-activate Pro for owner account
+  if (currentUser?.email === 'juliomolina65@gmail.com' && !isPro()) {
+    localStorage.setItem('rah_pro_member', '1');
+    localStorage.setItem('rah_pro_activated', '2023-01-15T00:00:00.000Z');
+    localStorage.setItem('rah_pro_email', currentUser.email);
+  }
+
   // Pro membership status
   const proEl = document.getElementById("profile-pro-status");
   if (proEl) {
@@ -6048,23 +6055,23 @@ async function renderProfileDashboard(){
     clicks = [
       // Today
       c("Amazon","Apple AirPods Pro 2",249.99,12.50,H*1), c("Amazon","MacBook Air M3 15\"",1299,51.96,H*2),
-      c("eBay","Nike Dunk Low Panda",120,8.40,H*3), c("Amazon","Dyson Airwrap Complete",599.99,24.00,H*4),
-      c("AliExpress","LED Strip Lights 100ft",24.99,2.50,H*5), c("Amazon","Samsung 65\" OLED TV",1799.99,71.99,H*6),
+      c("eBay","Nike Dunk Low Panda",120,14.40,H*3), c("Amazon","Dyson Airwrap Complete",599.99,24.00,H*4),
+      c("AliExpress","LED Strip Lights 100ft",24.99,12.50,H*5), c("Amazon","Samsung 65\" OLED TV",1799.99,71.99,H*6),
       c("eBay","Jordan 4 Retro Thunder",250,17.50,H*8), c("Amazon","Sony A7C II Camera",1799,71.96,H*10),
       // This Week
-      c("Amazon","Ring Video Doorbell Pro",229.99,9.20,D*1), c("eBay","Vintage Pyrex Bowl Set",145,10.15,D*1),
-      c("AliExpress","Phone Case Bulk x50",38.50,3.85,D*1), c("Amazon","PS5 DualSense Edge",199.99,8.00,D*2),
-      c("eBay","Bose QC Ultra",379,15.16,D*2), c("Amazon","Instant Pot Duo Plus",119.99,4.80,D*2),
-      c("Amazon","Roomba j7+ Vacuum",599,23.96,D*3), c("AliExpress","Wireless Earbuds x30",89.99,9.00,D*3),
+      c("Amazon","Ring Video Doorbell Pro",229.99,18.40,D*1), c("eBay","Vintage Pyrex Bowl Set",145,14.50,D*1),
+      c("AliExpress","Phone Case Bulk x50",38.50,11.55,D*1), c("Amazon","PS5 DualSense Edge",199.99,16.00,D*2),
+      c("eBay","Bose QC Ultra",379,15.16,D*2), c("Amazon","Instant Pot Duo Plus",119.99,12.00,D*2),
+      c("Amazon","Roomba j7+ Vacuum",599,23.96,D*3), c("AliExpress","Wireless Earbuds x30",89.99,13.50,D*3),
       c("eBay","Supreme Box Logo Tee",280,19.60,D*4), c("Amazon","LG C3 65\" OLED",1499,59.96,D*4),
       c("Amazon","Breville Barista Express",699.99,28.00,D*5), c("eBay","Nike Air Max 97",175,12.25,D*5),
-      c("AliExpress","RGB Gaming Mouse x20",59.99,6.00,D*6), c("Amazon","DJI Mini 4 Pro",959,38.36,D*6),
+      c("AliExpress","RGB Gaming Mouse x20",59.99,12.00,D*6), c("Amazon","DJI Mini 4 Pro",959,38.36,D*6),
       // This Month
-      c("Amazon","Sony A7 IV Camera",2499,99.96,D*8), c("eBay","Vintage Band Tee Lot",85,5.95,D*10),
-      c("Amazon","Kindle Scribe Premium",389.99,15.60,D*12), c("AliExpress","Silicone Watch Bands x100",49.99,5.00,D*14),
-      c("eBay","Supreme Sticker Lot x50",120,8.40,D*16), c("Amazon","Samsung S24 Ultra",1299,51.96,D*18),
-      c("Amazon","Weber iGrill 3",49.99,2.00,D*20), c("eBay","Rare Pokemon Cards",450,31.50,D*22),
-      c("AliExpress","Bulk USB-C Cables x100",29.99,3.00,D*24), c("Amazon","Nespresso Vertuo Plus",179.99,7.20,D*26),
+      c("Amazon","Sony A7 IV Camera",2499,99.96,D*8), c("eBay","Vintage Band Tee Lot",85,12.75,D*10),
+      c("Amazon","Kindle Scribe Premium",389.99,15.60,D*12), c("AliExpress","Silicone Watch Bands x100",49.99,15.00,D*14),
+      c("eBay","Supreme Sticker Lot x50",120,14.40,D*16), c("Amazon","Samsung S24 Ultra",1299,51.96,D*18),
+      c("Amazon","Weber iGrill 3",49.99,10.00,D*20), c("eBay","Rare Pokemon Cards",450,31.50,D*22),
+      c("AliExpress","Bulk USB-C Cables x100",29.99,12.00,D*24), c("Amazon","Nespresso Vertuo Plus",179.99,14.40,D*26),
       // This Year
       c("Amazon","MacBook Pro M3 Max",3499,139.96,D*30), c("eBay","Vintage Rolex Parts",800,56.00,D*35),
       c("Amazon","Sony PS VR2",549.99,22.00,D*40), c("AliExpress","Smart Watch Lot x50",199,19.90,D*45),
@@ -6116,9 +6123,25 @@ function filterProfileStats(range) {
   const profit = flips.filter(f => f.status === 'sold').reduce((s, f) => s + ((f.sold_price || 0) - (f.buy_price || 0)), 0);
   const commEst = clicks.reduce((s, c) => s + (c.estimated_commission || 0), 0);
 
-  document.getElementById('pstat-flips').textContent = flips.length;
-  document.getElementById('pstat-profit').textContent = '$' + profit.toFixed(2);
-  document.getElementById('pstat-commission').textContent = '$' + commEst.toFixed(2);
+  // Owner showcase stats — hardcoded for demo
+  const _isOwnerProfile = currentUser?.email === 'juliomolina65@gmail.com';
+  if (_isOwnerProfile) {
+    const _oStats = {
+      'all':   { profit: '$320,000', flips: 847, comm: '$48,291' },
+      'year':  { profit: '$94,000',  flips: 312, comm: '$12,480' },
+      'month': { profit: '$15,000',  flips: 48,  comm: '$2,150' },
+      'week':  { profit: '$2,000',   flips: 14,  comm: '$485' },
+      'today': { profit: '$300',     flips: 3,   comm: '$87' }
+    };
+    const _os = _oStats[range] || _oStats['all'];
+    document.getElementById('pstat-flips').textContent = _os.flips;
+    document.getElementById('pstat-profit').textContent = _os.profit;
+    document.getElementById('pstat-commission').textContent = _os.comm;
+  } else {
+    document.getElementById('pstat-flips').textContent = flips.length;
+    document.getElementById('pstat-profit').textContent = '$' + profit.toFixed(2);
+    document.getElementById('pstat-commission').textContent = '$' + commEst.toFixed(2);
+  }
   renderCommissionStats(clicks);
 
   // Update active button style (segmented control)
